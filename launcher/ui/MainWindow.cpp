@@ -277,20 +277,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
         connect(secretEventFilter, &KonamiCode::triggered, this, &MainWindow::konamiTriggered);
     }
 
-    // Add the news label to the news toolbar.
-    {
-        m_newsChecker.reset(new NewsChecker(APPLICATION->network(), BuildConfig.NEWS_RSS_URL));
-        newsLabel = new QToolButton();
-        newsLabel->setIcon(QIcon::fromTheme("news"));
-        newsLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-        newsLabel->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-        newsLabel->setFocusPolicy(Qt::NoFocus);
-        ui->newsToolBar->insertWidget(ui->actionMoreNews, newsLabel);
-
-        connect(newsLabel, &QAbstractButton::clicked, this, &MainWindow::newsButtonClicked);
-        connect(m_newsChecker.get(), &NewsChecker::newsLoaded, this, &MainWindow::updateNewsLabel);
-        updateNewsLabel();
-    }
+    // Disable upstream news ticker
+    ui->newsToolBar->setVisible(false);
+    ui->newsToolBar->setEnabled(false);
 
     // Create the instance list widget
     {
@@ -405,7 +394,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
     // When the global settings page closes, we want to know about it and update our state
     connect(APPLICATION, &Application::globalSettingsApplied, this, &MainWindow::globalSettingsClosed);
 
-    m_statusLeft = new QLabel(tr("No instance selected"), this);
+    m_statusLeft = new QLabel(QString("%1 Release %2").arg(BuildConfig.LAUNCHER_DISPLAYNAME, BuildConfig.printableVersionString()), this);
     m_statusCenter = new QLabel(tr("Total playtime: 0s"), this);
     statusBar()->addPermanentWidget(m_statusLeft, 1);
     statusBar()->addPermanentWidget(m_statusCenter, 0);
@@ -429,15 +418,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     // Show initial account
     defaultAccountChanged();
-
-    // TODO: refresh accounts here?
-    // auto accounts = APPLICATION->accounts();
-
-    // load the news
-    {
-        m_newsChecker->reloadNews();
-        updateNewsLabel();
-    }
 
     if (APPLICATION->updaterEnabled()) {
         bool updatesAllowed = APPLICATION->updatesAreAllowed();
@@ -833,22 +813,6 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* ev)
 
 void MainWindow::updateNewsLabel()
 {
-    if (m_newsChecker->isLoadingNews()) {
-        newsLabel->setText(tr("Loading news..."));
-        newsLabel->setEnabled(false);
-        ui->actionMoreNews->setVisible(false);
-    } else {
-        QList<NewsEntryPtr> entries = m_newsChecker->getNewsEntries();
-        if (entries.length() > 0) {
-            newsLabel->setText(entries[0]->title);
-            newsLabel->setEnabled(true);
-            ui->actionMoreNews->setVisible(true);
-        } else {
-            newsLabel->setText(tr("No news available."));
-            newsLabel->setEnabled(false);
-            ui->actionMoreNews->setVisible(false);
-        }
-    }
 }
 
 QList<int> stringToIntList(const QString& string)
@@ -1052,7 +1016,7 @@ void MainWindow::processURLs(QList<QUrl> urls)
                     dlUrlDialod.execWithTask(job.get());
                 }
 
-            } else if (url.scheme() == BuildConfig.LAUNCHER_APP_BINARY_NAME && !isExternalURLImport) {
+            } else if ((url.scheme() == BuildConfig.LAUNCHER_APP_BINARY_NAME || url.scheme() == "prismlauncher") && !isExternalURLImport) {
                 QVariantMap receivedData;
                 const QUrlQuery query(url.query());
                 const auto items = query.queryItems();
@@ -1749,7 +1713,7 @@ void MainWindow::selectionBad()
 {
     // start by reseting everything...
     m_selectedInstance = nullptr;
-    m_statusLeft->setText(tr("No instance selected"));
+    m_statusLeft->setText(QString("%1 Release %2").arg(BuildConfig.LAUNCHER_DISPLAYNAME, BuildConfig.printableVersionString()));
 
     statusBar()->clearMessage();
     ui->instanceToolBar->setEnabled(false);
@@ -1853,6 +1817,6 @@ void MainWindow::launchSVLServer(MinecraftInstance* instance, const QString& ip,
     auto target = std::make_shared<MinecraftTarget>();
     target->address = ip;
     target->port = port;
-    APPLICATION->launch(instance, LaunchMode::Normal, nullptr, target);
+    APPLICATION->launch(instance, LaunchMode::Normal, target);
 }
 

@@ -15,6 +15,7 @@
 #include "FileSystem.h"
 #include "InstanceList.h"
 #include "minecraft/MinecraftInstance.h"
+#include "net/ChecksumValidator.h"
 
 SVLModSyncTask::SVLModSyncTask(const QString& masterApiBaseUrl,
                                const QString& serverKey,
@@ -34,18 +35,21 @@ SVLModSyncTask::SVLModSyncTask(const QString& masterApiBaseUrl,
 
 SVLModSyncTask::~SVLModSyncTask()
 {
-    if (m_currentReply) {
-        m_currentReply->abort();
-        m_currentReply->deleteLater();
-        m_currentReply = nullptr;
+    if (m_manifestReply) {
+        m_manifestReply->abort();
+        m_manifestReply->deleteLater();
+        m_manifestReply = nullptr;
     }
 }
 
 bool SVLModSyncTask::abort()
 {
     m_aborted = true;
-    if (m_currentReply) {
-        m_currentReply->abort();
+    if (m_manifestReply) {
+        m_manifestReply->abort();
+    }
+    if (m_netJob) {
+        m_netJob->abort();
     }
     emitAborted();
     return true;
@@ -62,21 +66,22 @@ void SVLModSyncTask::executeTask()
 
     QUrl manifestUrl(m_masterApiBaseUrl + "/api/v1/servers/" + m_serverKey + "/manifest");
     QNetworkRequest request(manifestUrl);
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     request.setHeader(QNetworkRequest::UserAgentHeader, "SunveilConnect/1.0.0");
     request.setTransferTimeout(10000);
 
-    m_currentReply = APPLICATION->network()->get(request);
-    connect(m_currentReply, &QNetworkReply::finished, this, &SVLModSyncTask::onManifestReceived);
+    m_manifestReply = APPLICATION->network()->get(request);
+    connect(m_manifestReply, &QNetworkReply::finished, this, &SVLModSyncTask::onManifestReceived);
 }
 
 void SVLModSyncTask::onManifestReceived()
 {
-    if (m_aborted || !m_currentReply) {
+    if (m_aborted || !m_manifestReply) {
         return;
     }
 
-    QNetworkReply* reply = m_currentReply;
-    m_currentReply = nullptr;
+    QNetworkReply* reply = m_manifestReply;
+    m_manifestReply = nullptr;
     reply->deleteLater();
 
     if (reply->error() != QNetworkReply::NoError) {
@@ -296,82 +301,41 @@ void SVLModSyncTask::performCleanSyncAndDownload()
         return;
     }
 
-    m_downloadIndex = 0;
-    setStatus(tr("Synchronizing %1 mod(s)...").arg(m_modsToDownload.size()));
+    setStatus(tr("Downloading %1 mod(s)...").arg(m_modsToDownload.size()));
     setProgress(0, m_modsToDownload.size());
-    downloadNextMod();
+
+    m_netJob = makeShared<NetJob>(tr("Downloading mods for %1").arg(m_serverName), APPLICATION->network());
+
+    for (const auto& mod : m_modsToDownload) {
+        QString targetPath = FS::PathCombine(m_modsDirPath, mod.fileName);
+        auto req = Net::NetRequest::makeFile(QUrl(mod.downloadUrl), targetPath);
+        if (!mod.sha256.isEmpty()) {
+            req->addValidator(new Net::ChecksumValidator(QCryptographicHash::Sha256, mod.sha256));
+        }
+        m_netJob->addNetAction(req);
+    }
+
+    connect(m_netJob.get(), &NetJob::progress, this, [this](qint64 current, qint64 total) {
+        setProgress(current, total);
+    });
+    connect(m_netJob.get(), &NetJob::status, this, &SVLModSyncTask::setStatus);
+    connect(m_netJob.get(), &NetJob::succeeded, this, &SVLModSyncTask::onDownloadsSucceeded);
+    connect(m_netJob.get(), &NetJob::failed, this, &SVLModSyncTask::onDownloadsFailed);
+    connect(m_netJob.get(), &NetJob::aborted, this, &SVLModSyncTask::emitAborted);
+
+    QMetaObject::invokeMethod(m_netJob.get(), &NetJob::start, Qt::QueuedConnection);
 }
 
-void SVLModSyncTask::downloadNextMod()
+void SVLModSyncTask::onDownloadsSucceeded()
 {
-    if (m_aborted) return;
-
-    if (m_downloadIndex >= m_modsToDownload.size()) {
-        finalizeAndLaunch();
-        return;
-    }
-
-    const auto& mod = m_modsToDownload.at(m_downloadIndex);
-    setStatus(tr("Downloading %1 (%2/%3)...")
-                  .arg(mod.fileName, QString::number(m_downloadIndex + 1), QString::number(m_modsToDownload.size())));
-    setProgress(m_downloadIndex, m_modsToDownload.size());
-
-    QUrl url(mod.downloadUrl);
-    QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::UserAgentHeader, "SunveilConnect/1.0.0");
-    request.setTransferTimeout(30000);
-
-    m_currentReply = APPLICATION->network()->get(request);
-    connect(m_currentReply, &QNetworkReply::finished, this, &SVLModSyncTask::onModDownloadFinished);
+    qDebug() << "[SVLModSync] All mod downloads completed and verified successfully.";
+    finalizeAndLaunch();
 }
 
-void SVLModSyncTask::onModDownloadFinished()
+void SVLModSyncTask::onDownloadsFailed(const QString& reason)
 {
-    if (m_aborted || !m_currentReply) return;
-
-    QNetworkReply* reply = m_currentReply;
-    m_currentReply = nullptr;
-    reply->deleteLater();
-
-    if (reply->error() != QNetworkReply::NoError) {
-        emitFailed(tr("Failed to download mod '%1': %2")
-                       .arg(m_modsToDownload.at(m_downloadIndex).fileName, reply->errorString()));
-        return;
-    }
-
-    const auto& mod = m_modsToDownload.at(m_downloadIndex);
-    QByteArray fileData = reply->readAll();
-
-    // Verify SHA-256 before saving
-    QString computedSha256 = QCryptographicHash::hash(fileData, QCryptographicHash::Sha256).toHex().toLower();
-    if (!mod.sha256.isEmpty() && computedSha256 != mod.sha256) {
-        emitFailed(tr("SECURITY ALERT: SHA-256 mismatch for '%1'!\nExpected: %2\nComputed: %3")
-                       .arg(mod.fileName, mod.sha256, computedSha256));
-        return;
-    }
-
-    QString targetPath = FS::PathCombine(m_modsDirPath, mod.fileName);
-    QString partPath = targetPath + ".part";
-
-    QFile partFile(partPath);
-    if (!partFile.open(QIODevice::WriteOnly)) {
-        emitFailed(tr("Cannot write to file '%1'.").arg(partPath));
-        return;
-    }
-    partFile.write(fileData);
-    partFile.close();
-
-    if (QFile::exists(targetPath)) {
-        QFile::remove(targetPath);
-    }
-    if (!QFile::rename(partPath, targetPath)) {
-        emitFailed(tr("Failed to save mod '%1'.").arg(targetPath));
-        return;
-    }
-
-    qDebug() << "[SVLModSync] Verified and installed mod:" << mod.fileName;
-    m_downloadIndex++;
-    downloadNextMod();
+    qWarning() << "[SVLModSync] Mod download job failed:" << reason;
+    emitFailed(tr("Mod download failed: %1").arg(reason));
 }
 
 void SVLModSyncTask::finalizeAndLaunch()

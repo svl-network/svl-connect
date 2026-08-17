@@ -320,6 +320,7 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
           { "alive", "Write a small '" + liveCheckFile + "' file after the launcher starts" },
           { "show-window", "Show the main launcher window (useful in combination with --launch)" },
           { { "I", "import" }, "Import instance or resource from specified local path or URL", "url" },
+          { { "u", "url" }, "URL to open or handle", "url" },
           { "show", "Opens the window for the specified instance (by instance ID)", "show" } });
     // Has to be positional for some OS to handle that properly
     parser.addPositionalArgument("URL", "Import the resource(s) at the given URL(s) (same as -I / --import)", "[URL...]");
@@ -343,6 +344,9 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
     m_showMainWindow = parser.isSet("show-window");
 
     for (auto url : parser.values("import")) {
+        m_urlsToImport.append(normalizeImportUrl(url));
+    }
+    for (auto url : parser.values("url")) {
         m_urlsToImport.append(normalizeImportUrl(url));
     }
 
@@ -1073,9 +1077,9 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
 
     // check update locks
     {
-        auto update_log_path = FS::PathCombine(m_dataPath, "logs", "prism_launcher_update.log");
+        auto update_log_path = FS::PathCombine(m_dataPath, "logs", "svl_connect_update.log");
 
-        auto update_lock = QFileInfo(FS::PathCombine(m_dataPath, ".prism_launcher_update.lock"));
+        auto update_lock = QFileInfo(FS::PathCombine(m_dataPath, ".svl_connect_update.lock"));
         if (update_lock.exists()) {
             auto [timestamp, from, to, target, data_path] = read_lock_File(update_lock.absoluteFilePath());
             auto infoMsg = tr("This installation has a update lock file present at: %1\n"

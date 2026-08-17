@@ -8,6 +8,7 @@
 #include <memory>
 
 #include "tasks/Task.h"
+#include "net/NetJob.h"
 #include "ui/dialogs/SVLQuarantineDialog.h"
 
 class MinecraftInstance;
@@ -35,8 +36,8 @@ signals:
 
 private slots:
     void onManifestReceived();
-    void downloadNextMod();
-    void onModDownloadFinished();
+    void onDownloadsSucceeded();
+    void onDownloadsFailed(const QString& reason);
 
 private:
     void processManifest(const QByteArray& data);
@@ -63,8 +64,8 @@ private:
     // Sync state
     QString m_modsDirPath;
     QList<SVLModEntry> m_modsToDownload;
-    int m_downloadIndex = 0;
-    QNetworkReply* m_currentReply = nullptr;
+    QNetworkReply* m_manifestReply = nullptr;
+    NetJob::Ptr m_netJob;
 
     MinecraftInstance* m_instance = nullptr;
 };

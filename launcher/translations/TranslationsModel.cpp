@@ -37,12 +37,36 @@
 #include "TranslationsModel.h"
 
 #include <QDebug>
+#include <QTranslator>
 #include <algorithm>
 #include <memory>
 #include <utility>
 
 #include "BuildConfig.h"
 #include "FileSystem.h"
+
+namespace {
+class BrandingTranslator : public QTranslator {
+public:
+    using QTranslator::QTranslator;
+    QString translate(const char* context, const char* sourceText, const char* disambiguation = nullptr, int n = -1) const override
+    {
+        QString str = QTranslator::translate(context, sourceText, disambiguation, n);
+        if (str.isEmpty() && sourceText) {
+            str = QString::fromUtf8(sourceText);
+        }
+        if (str.isEmpty()) {
+            return str;
+        }
+        str.replace("Prism Launcher", BuildConfig.LAUNCHER_DISPLAYNAME);
+        str.replace("Prism-Launcher", BuildConfig.LAUNCHER_DISPLAYNAME);
+        str.replace("PrismLauncher", BuildConfig.LAUNCHER_NAME);
+        str.replace("prismlauncher", BuildConfig.LAUNCHER_APP_BINARY_NAME);
+        str.replace("PolyMC", BuildConfig.LAUNCHER_NAME);
+        return str;
+    }
+};
+}  // namespace
 #include "Json.h"
 #include "net/ChecksumValidator.h"
 #include "net/NetJob.h"
@@ -478,8 +502,10 @@ bool TranslationsModel::selectLanguage(QString key) const
     const bool useSystemLocale = APPLICATION->settings()->get("UseSystemLocale").toBool();
     QLocale::setDefault(useSystemLocale ? QLocale::system() : QLocale(langCode));
 
-    // if it's the default UI language, finish
+    // if it's the default UI language, install branding translator and finish
     if (langCode == g_defaultLangCode) {
+        d->m_appTranslator = std::make_unique<BrandingTranslator>();
+        QCoreApplication::installTranslator(d->m_appTranslator.get());
         d->m_selectedLanguage = langCode;
         return true;
     }
@@ -515,7 +541,7 @@ bool TranslationsModel::selectLanguage(QString key) const
             d->m_appTranslator.reset();
         }
     } else if (langPtr->localFileType == FileType::Qm) {
-        d->m_appTranslator = std::make_unique<QTranslator>();
+        d->m_appTranslator = std::make_unique<BrandingTranslator>();
         if (d->m_appTranslator->load("mmc_" + langCode, d->m_dir.path())) {
             qDebug() << "Loading Application Language File for" << langCode.toLocal8Bit().constData() << "...";
             if (!QCoreApplication::installTranslator(d->m_appTranslator.get())) {

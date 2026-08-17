@@ -60,45 +60,41 @@ bool isSchemeHandlerRegistered()
     return output.contains(APPLICATION->desktopFileName());
 
 #elif defined(Q_OS_WIN)
-    QString regPath = QString("HKEY_CURRENT_USER\\Software\\Classes\\%1").arg(BuildConfig.LAUNCHER_APP_BINARY_NAME);
-    QSettings settings(regPath, QSettings::NativeFormat);
-
-    const QString registeredRunCommand = settings.value("shell/open/command/.").toString().replace("\\", "/");
-    return registeredRunCommand.contains(QCoreApplication::applicationFilePath());
+    auto checkAndRegister = [](const QString& scheme) {
+        QString regPath = QString("HKEY_CURRENT_USER\\Software\\Classes\\%1").arg(scheme);
+        QSettings settings(regPath, QSettings::NativeFormat);
+        const QString registeredRunCommand = settings.value("shell/open/command/.").toString().replace("\\", "/");
+        QString appPath = QDir::toNativeSeparators(QCoreApplication::applicationFilePath());
+        settings.setValue(".", QString("URL:%1 Protocol").arg(scheme));
+        settings.setValue("URL Protocol", "");
+        settings.setValue("shell/open/command/.", QString("\"%1\" \"%2\"").arg(QDir::toNativeSeparators(QCoreApplication::applicationFilePath()), "%1"));
+    };
+    checkAndRegister("prismlauncher");
+    checkAndRegister(BuildConfig.LAUNCHER_APP_BINARY_NAME);
 #endif
     return true;
 }
 
-class CustomOAuthOobReplyHandler : public QOAuthOobReplyHandler {
+class DualOAuthReplyHandler final : public QOAuthHttpServerReplyHandler {
     Q_OBJECT
 
    public:
-    explicit CustomOAuthOobReplyHandler(QObject* parent = nullptr) : QOAuthOobReplyHandler(parent)
+    explicit DualOAuthReplyHandler(quint16 port = 0, QObject* parent = nullptr)
+        : QOAuthHttpServerReplyHandler(port, parent)
     {
-        connect(APPLICATION, &Application::oauthReplyRecieved, this, &QOAuthOobReplyHandler::callbackReceived);
+        connect(APPLICATION, &Application::oauthReplyRecieved, this, &DualOAuthReplyHandler::handleCustomSchemeReply);
     }
-    ~CustomOAuthOobReplyHandler() override
+
+    ~DualOAuthReplyHandler() override
     {
-        disconnect(APPLICATION, &Application::oauthReplyRecieved, this, &QOAuthOobReplyHandler::callbackReceived);
+        disconnect(APPLICATION, &Application::oauthReplyRecieved, this, &DualOAuthReplyHandler::handleCustomSchemeReply);
     }
-    QString callback() const override { return BuildConfig.LAUNCHER_APP_BINARY_NAME + "://oauth/microsoft"; }
 
-   protected:
-    void networkReplyFinished(QNetworkReply* reply) override
+   private slots:
+    void handleCustomSchemeReply(const QVariantMap& data)
     {
-        if (reply->error() != QNetworkReply::NoError) {
-            qWarning() << "OAuth2 request failed:" << reply->readAll();
-        }
-
-        QOAuthOobReplyHandler::networkReplyFinished(reply);
+        callbackReceived(data);
     }
-};
-
-class LoggingOAuthHttpServerReplyHandler final : public QOAuthHttpServerReplyHandler {
-    Q_OBJECT
-
-   public:
-    explicit LoggingOAuthHttpServerReplyHandler(QObject* parent = nullptr) : QOAuthHttpServerReplyHandler(parent) {}
 
    protected:
     void networkReplyFinished(QNetworkReply* reply) override
@@ -114,24 +110,35 @@ class LoggingOAuthHttpServerReplyHandler final : public QOAuthHttpServerReplyHan
 MSAStep::MSAStep(AccountData* data, bool silent) : AuthStep(data), m_silent(silent)
 {
     m_clientId = APPLICATION->getMSAClientID();
-    if (QCoreApplication::applicationFilePath().startsWith("/tmp/.mount_") || APPLICATION->isPortable() || !isSchemeHandlerRegistered())
-
-    {
-        auto replyHandler = new LoggingOAuthHttpServerReplyHandler(this);
-        replyHandler->setCallbackText(QString(R"XXX(
-    <noscript>
-      <meta http-equiv="Refresh" content="0; URL=%1" />
-    </noscript>
-    Login Successful, redirecting...
-    <script>
-      window.location.replace("%1");
-    </script>
-    )XXX")
-                                          .arg(BuildConfig.LOGIN_CALLBACK_URL));
-        m_oauth2.setReplyHandler(replyHandler);
-    } else {
-        m_oauth2.setReplyHandler(new CustomOAuthOobReplyHandler(this));
+    
+    auto replyHandler = new DualOAuthReplyHandler(28443, this);
+    if (!replyHandler->isListening()) {
+        delete replyHandler;
+        replyHandler = new DualOAuthReplyHandler(0, this);
     }
+
+    replyHandler->setCallbackText(QString(R"XXX(
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Sunveil Connect - Login Successful</title>
+    <style>
+        body { background-color: #121316; color: #f0f0f0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .card { background: #1a1c23; border: 1px solid #333842; padding: 40px 60px; border-radius: 12px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { color: #22c55e; margin-bottom: 12px; font-size: 24px; font-weight: 600; }
+        p { color: #aaa; margin: 0; font-size: 15px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>✓ Erfolgreich angemeldet!</h1>
+        <p>Du kannst diesen Browsertab jetzt schlie&szlig;en und zu Sunveil Connect zur&uuml;ckkehren.</p>
+    </div>
+</body>
+</html>
+)XXX"));
+    m_oauth2.setReplyHandler(replyHandler);
     m_oauth2.setAuthorizationUrl(QUrl("https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize"));
     m_oauth2.setAccessTokenUrl(QUrl("https://login.microsoftonline.com/consumers/oauth2/v2.0/token"));
     m_oauth2.setScope("XboxLive.SignIn XboxLive.offline_access");

@@ -207,9 +207,9 @@ void SVLConnectPage::onServersReceived()
         return;
     }
 
-    QByteArray data = reply->readAll();
+    QByteArray payload = reply->readAll();
     QJsonParseError parseError;
-    QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
+    QJsonDocument doc = QJsonDocument::fromJson(payload, &parseError);
 
     m_allServers.clear();
     if (parseError.error == QJsonParseError::NoError && doc.isArray()) {
@@ -374,7 +374,7 @@ void SVLConnectPage::onConnectClicked(const SVLServerModel& server)
 
     ProgressDialog dlg(this);
     dlg.setWindowTitle(tr("Sunveil Mod Synchronization"));
-    if (dlg.exec(syncTask) != QDialog::Accepted) {
+    if (dlg.execWithTask(syncTask) != QDialog::Accepted) {
         qDebug() << "[SVLConnectPage] Mod sync task cancelled or aborted.";
     }
 }

@@ -111,9 +111,13 @@ MSALoginDialog::~MSALoginDialog()
 
 void MSALoginDialog::onTaskFailed(QString reason)
 {
+    if ((m_authflow_task && m_authflow_task->isRunning()) || (m_devicecode_task && m_devicecode_task->isRunning())) {
+        qWarning() << "[MSALoginDialog] One authentication method encountered an issue, fallback method remains active:" << reason;
+        return;
+    }
     // Set message
-    m_authflow_task->disconnect();
-    m_devicecode_task->disconnect();
+    if (m_authflow_task) m_authflow_task->disconnect();
+    if (m_devicecode_task) m_devicecode_task->disconnect();
     ui->stackedWidget->setCurrentIndex(0);
     auto lines = reason.split('\n');
     QString processed;
@@ -126,7 +130,7 @@ void MSALoginDialog::onTaskFailed(QString reason)
     }
     ui->status->setText(processed);
     auto task = m_authflow_task;
-    if (task->failReason().isEmpty()) {
+    if (task && task->failReason().isEmpty()) {
         task = m_devicecode_task;
     }
     if (task) {

@@ -1,6 +1,7 @@
 #include "POTranslator.h"
 
 #include <QDebug>
+#include "BuildConfig.h"
 #include "FileSystem.h"
 
 struct POEntry {
@@ -276,6 +277,7 @@ POTranslator::~POTranslator()
 
 QString POTranslator::translate(const char* context, const char* sourceText, const char* disambiguation, [[maybe_unused]] int n) const
 {
+    QString result;
     if (disambiguation) {
         auto disambiguationKey = QByteArray(context) + "|" + QByteArray(sourceText) + "@" + QByteArray(disambiguation);
         auto iter = d->mapping_disambiguatrion.find(disambiguationKey);
@@ -287,20 +289,29 @@ QString POTranslator::translate(const char* context, const char* sourceText, con
             if (entry.fuzzy) {
                 qDebug() << "Translation entry is fuzzy:" << disambiguationKey << "->" << entry.text;
             }
-            return entry.text;
+            result = entry.text;
         }
     }
-    auto key = QByteArray(context) + "|" + QByteArray(sourceText);
-    auto iter = d->mapping.find(key);
-    if (iter != d->mapping.end()) {
-        auto& entry = *iter;
-        if (entry.text.isEmpty()) {
-            qDebug() << "Translation entry has no content:" << key;
+    if (result.isEmpty()) {
+        auto key = QByteArray(context) + "|" + QByteArray(sourceText);
+        auto iter = d->mapping.find(key);
+        if (iter != d->mapping.end()) {
+            auto& entry = *iter;
+            if (entry.text.isEmpty()) {
+                qDebug() << "Translation entry has no content:" << key;
+            }
+            if (entry.fuzzy) {
+                qDebug() << "Translation entry is fuzzy:" << key << "->" << entry.text;
+            }
+            result = entry.text;
         }
-        if (entry.fuzzy) {
-            qDebug() << "Translation entry is fuzzy:" << key << "->" << entry.text;
-        }
-        return entry.text;
+    }
+    if (!result.isEmpty()) {
+        result.replace("Prism Launcher", BuildConfig.LAUNCHER_DISPLAYNAME);
+        result.replace("Prism-Launcher", BuildConfig.LAUNCHER_DISPLAYNAME);
+        result.replace("PrismLauncher", BuildConfig.LAUNCHER_NAME);
+        result.replace("prismlauncher", BuildConfig.LAUNCHER_APP_BINARY_NAME);
+        return result;
     }
     return QString();
 }
