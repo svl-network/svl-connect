@@ -35,9 +35,11 @@ public:
     ~SVLConnectPage() override;
 
     void refreshServers();
+    void launchServer(const SVLServerModel& server);
 
 signals:
     void launchRequested(MinecraftInstance* instance, const QString& ip, quint16 port);
+    void serverDetailsRequested(const SVLServerModel& server);
 
 private slots:
     void onServersReceived();

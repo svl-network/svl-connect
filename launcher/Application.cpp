@@ -714,7 +714,7 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
         m_settings->registerSetting("JsonEditor", QString());
 
         // Language
-        m_settings->registerSetting("Language", QString());
+        m_settings->registerSetting("Language", "en_US");
         m_settings->registerSetting("UseSystemLocale", false);
 
         // Console

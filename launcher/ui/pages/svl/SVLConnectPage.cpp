@@ -17,7 +17,8 @@
 
 #include "Application.h"
 #include "tasks/SVLModSyncTask.h"
-#include "ui/dialogs/ProgressDialog.h"
+#include "ui/dialogs/SVLLoadingOverlay.h"
+#include "ui/dialogs/CustomMessageBox.h"
 #include "minecraft/MinecraftInstance.h"
 
 SVLConnectPage::SVLConnectPage(QWidget* parent)
@@ -38,142 +39,54 @@ SVLConnectPage::~SVLConnectPage()
 
 void SVLConnectPage::setupUI()
 {
-    setStyleSheet(R"(
-        QWidget#SVLConnectPage {
-            background-color: #080C0E;
-            color: #F8FAFC;
-            font-family: 'Segoe UI', -apple-system, sans-serif;
-        }
-        QLineEdit#searchEdit {
-            background-color: #0E1418;
-            border: 1px solid #1E2B33;
-            border-radius: 8px;
-            padding: 10px 16px;
-            color: #F8FAFC;
-            font-size: 13px;
-        }
-        QLineEdit#searchEdit:focus {
-            border: 1px solid #00E599;
-            background-color: #121A20;
-        }
-        QPushButton#refreshButton {
-            background-color: #0E1418;
-            border: 1px solid #1E2B33;
-            border-radius: 8px;
-            padding: 10px 20px;
-            color: #00E599;
-            font-weight: bold;
-            font-size: 13px;
-        }
-        QPushButton#refreshButton:hover {
-            background-color: #151F26;
-            border-color: #00E599;
-            color: #00FFAC;
-        }
-        QPushButton#refreshButton:pressed {
-            background-color: #0E1418;
-        }
-        QScrollArea {
-            border: none;
-            background-color: transparent;
-        }
-        QFrame[serverCard="true"] {
-            background-color: #0E1418;
-            border: 1px solid #1E2B33;
-            border-radius: 12px;
-        }
-        QFrame[serverCard="true"]:hover {
-            border: 1px solid #00E599;
-            background-color: #121A20;
-        }
-        QLabel.serverTitle {
-            font-size: 17px;
-            font-weight: 700;
-            color: #FFB800;
-        }
-        QLabel.playerCount {
-            font-size: 13px;
-            font-weight: 600;
-            color: #94A3B8;
-        }
-        QLabel.serverMotd {
-            font-size: 13px;
-            color: #94A3B8;
-            line-height: 1.4;
-        }
-        QLabel.badgeTag {
-            background-color: #151F26;
-            color: #94A3B8;
-            border: 1px solid #233440;
-            border-radius: 10px;
-            padding: 3px 10px;
-            font-size: 11px;
-            font-weight: bold;
-        }
-        QLabel.verifiedBadge {
-            background-color: rgba(0, 229, 153, 0.12);
-            color: #00E599;
-            border: 1px solid #00E599;
-            border-radius: 10px;
-            padding: 3px 10px;
-            font-size: 11px;
-            font-weight: bold;
-        }
-        QLabel.communityBadge {
-            background-color: rgba(245, 158, 11, 0.12);
-            color: #F59E0B;
-            border: 1px solid #F59E0B;
-            border-radius: 10px;
-            padding: 3px 10px;
-            font-size: 11px;
-            font-weight: bold;
-        }
-        QPushButton.connectButton {
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00E599, stop:1 #00C480);
-            color: #080C0E;
-            border: none;
-            border-radius: 8px;
-            padding: 9px 24px;
-            font-weight: bold;
-            font-size: 13px;
-        }
-        QPushButton.connectButton:hover {
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00FFAC, stop:1 #00E599);
-            color: #080C0E;
-        }
-        QPushButton.connectButton:pressed {
-            background: #00C480;
-        }
-    )");
-
     setObjectName("SVLConnectPage");
     auto* mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(24, 20, 24, 20);
     mainLayout->setSpacing(16);
 
-    // Header Controls
-    auto* headerLayout = new QHBoxLayout();
-    headerLayout->setSpacing(12);
+    // 1. Clean Page Header
+    auto* pageHeaderLayout = new QVBoxLayout();
+    pageHeaderLayout->setSpacing(4);
 
-    m_searchEdit = new QLineEdit(this);
-    m_searchEdit->setObjectName("searchEdit");
-    m_searchEdit->setPlaceholderText(tr("🔍 Filter server realms by name, version, or MOTD..."));
+    auto* titleLabel = new QLabel(tr("Realms"), this);
+    titleLabel->setObjectName("pageTitleLabel");
+    titleLabel->setStyleSheet("color: #FFFFFF; font-size: 22px; font-weight: 700;");
+    pageHeaderLayout->addWidget(titleLabel);
+
+    auto* subtitleLabel = new QLabel(tr("Select a server to automatically synchronize mods and connect."), this);
+    subtitleLabel->setObjectName("pageSubtitleLabel");
+    subtitleLabel->setStyleSheet("color: #94A3B8; font-size: 13px;");
+    pageHeaderLayout->addWidget(subtitleLabel);
+
+    mainLayout->addLayout(pageHeaderLayout);
+
+    // 2. Filter & Controls Bar
+    auto* filterFrame = new QFrame(this);
+    filterFrame->setObjectName("filterBarFrame");
+    filterFrame->setAttribute(Qt::WA_StyledBackground, true);
+    auto* filterLayout = new QHBoxLayout(filterFrame);
+    filterLayout->setContentsMargins(12, 8, 12, 8);
+    filterLayout->setSpacing(12);
+
+    m_searchEdit = new QLineEdit(filterFrame);
+    m_searchEdit->setObjectName("realmSearchInput");
+    m_searchEdit->setPlaceholderText(tr("Search realms..."));
     connect(m_searchEdit, &QLineEdit::textChanged, this, &SVLConnectPage::onSearchFilterChanged);
-    headerLayout->addWidget(m_searchEdit, 1);
+    filterLayout->addWidget(m_searchEdit, 1);
 
-    auto* refreshBtn = new QPushButton(tr("🔄 Refresh"), this);
+    m_statusLabel = new QLabel(tr("0 Online"), filterFrame);
+    m_statusLabel->setObjectName("statusPillBadge");
+    filterLayout->addWidget(m_statusLabel);
+
+    auto* refreshBtn = new QPushButton(tr("Refresh"), filterFrame);
     refreshBtn->setObjectName("refreshButton");
+    refreshBtn->setCursor(Qt::PointingHandCursor);
     connect(refreshBtn, &QPushButton::clicked, this, &SVLConnectPage::refreshServers);
-    headerLayout->addWidget(refreshBtn);
+    filterLayout->addWidget(refreshBtn);
 
-    mainLayout->addLayout(headerLayout);
+    mainLayout->addWidget(filterFrame);
 
-    // Status / Count bar
-    m_statusLabel = new QLabel(tr("Fetching active servers from Sunveil Network..."), this);
-    m_statusLabel->setStyleSheet("color: #64748B; font-size: 12px; font-weight: bold;");
-    mainLayout->addWidget(m_statusLabel);
-
-    // Scroll Area for Server Cards
+    // 3. Scroll Area for Server Cards
     m_scrollArea = new QScrollArea(this);
     m_scrollArea->setWidgetResizable(true);
 
@@ -196,7 +109,7 @@ void SVLConnectPage::refreshServers()
         m_currentReply = nullptr;
     }
 
-    m_statusLabel->setText(tr("Connecting to %1...").arg(m_masterApiBaseUrl));
+    m_statusLabel->setText(tr("Connecting..."));
 
     QUrl url(m_masterApiBaseUrl + "/api/v1/servers");
     QNetworkRequest request(url);
@@ -209,50 +122,56 @@ void SVLConnectPage::refreshServers()
 
 void SVLConnectPage::onServersReceived()
 {
-    if (!m_currentReply) return;
+    if (!m_currentReply) {
+        return;
+    }
 
-    QNetworkReply* reply = m_currentReply;
+    auto reply = m_currentReply;
     m_currentReply = nullptr;
     reply->deleteLater();
 
     if (reply->error() != QNetworkReply::NoError) {
-        m_statusLabel->setText(tr("⚠️ Failed to reach Master API (%1). Check connection or host settings.").arg(reply->errorString()));
+        m_statusLabel->setText(tr("Offline"));
         m_allServers.clear();
+        m_filteredServers.clear();
         renderServerCards();
         return;
     }
 
-    QByteArray payload = reply->readAll();
-    QJsonParseError parseError;
-    QJsonDocument doc = QJsonDocument::fromJson(payload, &parseError);
+    QByteArray responsePayload = reply->readAll();
+    QJsonDocument doc = QJsonDocument::fromJson(responsePayload);
+    if (!doc.isArray()) {
+        m_statusLabel->setText(tr("Invalid Data"));
+        return;
+    }
 
     m_allServers.clear();
-    if (parseError.error == QJsonParseError::NoError && doc.isArray()) {
-        QJsonArray arr = doc.array();
-        for (const QJsonValue& val : arr) {
-            if (!val.isObject()) continue;
+    QJsonArray array = doc.array();
+    for (const auto& val : array) {
+        if (val.isObject()) {
             QJsonObject obj = val.toObject();
-
             SVLServerModel model;
             model.serverKey = obj.value("serverKey").toString();
             model.name = obj.value("name").toString(model.serverKey);
             model.ip = obj.value("ip").toString("127.0.0.1");
             model.port = static_cast<quint16>(obj.value("port").toInt(25565));
-            model.verified = obj.value("verified").toBool(false);
 
             QJsonObject verObj = obj.value("version").toObject();
-            model.mcVersion = verObj.value("minecraft").toString("1.21.1");
-            model.loader = verObj.value("loader").toString("fabric");
-            model.loaderVersion = verObj.value("loaderVersion").toString();
+            model.mcVersion = verObj.value("minecraft").toString(obj.value("mcVersion").toString("1.21.1"));
+            model.loader = verObj.value("loader").toString(obj.value("loader").toString("fabric"));
+            model.loaderVersion = verObj.value("loaderVersion").toString(obj.value("loaderVersion").toString());
 
             QJsonObject statObj = obj.value("status").toObject();
-            model.players = statObj.value("players").toInt(0);
-            model.maxPlayers = statObj.value("maxPlayers").toInt(20);
-            model.motd = statObj.value("motd").toString();
+            model.players = statObj.value("players").toInt(obj.value("players").toInt(0));
+            model.maxPlayers = statObj.value("maxPlayers").toInt(obj.value("maxPlayers").toInt(20));
+            model.motd = statObj.value("motd").toString(obj.value("motd").toString());
+            model.verified = obj.value("verified").toBool(false);
 
-            QJsonArray modsArr = obj.value("mods").toArray();
-            model.modCount = modsArr.size();
-
+            if (obj.contains("mods") && obj.value("mods").isArray()) {
+                model.modCount = obj.value("mods").toArray().size();
+            } else {
+                model.modCount = obj.value("modCount").toInt(0);
+            }
             m_allServers.append(model);
         }
     }
@@ -276,7 +195,7 @@ void SVLConnectPage::onSearchFilterChanged(const QString& query)
         }
     }
 
-    m_statusLabel->setText(tr("Online Realms: %1 active server(s) found.").arg(m_filteredServers.size()));
+    m_statusLabel->setText(tr("● %1 Available").arg(m_filteredServers.size()));
     renderServerCards();
 }
 
@@ -292,7 +211,7 @@ void SVLConnectPage::renderServerCards()
     }
 
     if (m_filteredServers.isEmpty()) {
-        auto* emptyLabel = new QLabel(tr("No active Sunveil servers online. Click 'Refresh' to poll again."), this);
+        auto* emptyLabel = new QLabel(tr("No active Sunveil realms online. Click 'Refresh' to check again."), this);
         emptyLabel->setAlignment(Qt::AlignCenter);
         emptyLabel->setStyleSheet("color: #64748B; font-size: 14px; padding: 40px;");
         m_cardsLayout->addWidget(emptyLabel);
@@ -309,86 +228,117 @@ void SVLConnectPage::renderServerCards()
 QWidget* SVLConnectPage::createServerCard(const SVLServerModel& server)
 {
     auto* card = new QFrame(this);
-    card->setProperty("serverCard", true);
+    card->setObjectName("serverCard");
+    card->setAttribute(Qt::WA_StyledBackground, true);
 
     auto* cardLayout = new QVBoxLayout(card);
     cardLayout->setContentsMargins(18, 16, 18, 16);
     cardLayout->setSpacing(10);
 
-    // 1. Top Row: Server Title on left, Player Count on right
+    // 1. Top row: Name & Player count
     auto* topRow = new QHBoxLayout();
     topRow->setSpacing(12);
 
     auto* nameLabel = new QLabel(server.name, card);
-    nameLabel->setProperty("class", "serverTitle");
+    nameLabel->setObjectName("serverNameLabel");
     topRow->addWidget(nameLabel, 1);
 
-    auto* playersLabel = new QLabel(QString("🟢 %1 / %2").arg(QString::number(server.players), QString::number(server.maxPlayers)), card);
-    playersLabel->setProperty("class", "playerCount");
-    playersLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    auto* playersLabel = new QLabel(QString("%1 / %2").arg(QString::number(server.players), QString::number(server.maxPlayers)), card);
+    playersLabel->setObjectName("playerCountBadge");
+    playersLabel->setAlignment(Qt::AlignCenter);
     topRow->addWidget(playersLabel);
 
     cardLayout->addLayout(topRow);
 
-    // 2. Middle Row: MOTD Description
+    // 2. MOTD (if present)
     if (!server.motd.isEmpty()) {
         auto* motdLabel = new QLabel(server.motd, card);
-        motdLabel->setProperty("class", "serverMotd");
+        motdLabel->setObjectName("serverMotdLabel");
         motdLabel->setWordWrap(true);
         cardLayout->addWidget(motdLabel);
     }
 
-    // 3. Bottom Row: Badges on left, Connect CTA button on right
+    // 3. Bottom row: Specifications & Actions
     auto* bottomRow = new QHBoxLayout();
     bottomRow->setSpacing(8);
 
-    // Verified / Community badge
-    auto* statusBadge = new QLabel(card);
     if (server.verified) {
-        statusBadge->setText(tr("🟢 Verified"));
-        statusBadge->setProperty("class", "verifiedBadge");
-    } else {
-        statusBadge->setText(tr("🟡 Community"));
-        statusBadge->setProperty("class", "communityBadge");
+        auto* statusBadge = new QLabel(tr("Verified"), card);
+        statusBadge->setObjectName("badgeVerified");
+        bottomRow->addWidget(statusBadge);
     }
-    bottomRow->addWidget(statusBadge);
 
-    // Loader & Version badge
     auto* loaderBadge = new QLabel(QString("%1 %2").arg(server.loader.toUpper(), server.mcVersion), card);
-    loaderBadge->setProperty("class", "badgeTag");
+    loaderBadge->setProperty("class", "metaPill");
     bottomRow->addWidget(loaderBadge);
 
-    // Mods count badge
-    auto* modsBadge = new QLabel(tr("📦 %1 Mods").arg(server.modCount), card);
-    modsBadge->setProperty("class", "badgeTag");
-    bottomRow->addWidget(modsBadge);
+    if (server.modCount > 0) {
+        auto* modsBadge = new QLabel(tr("%1 mods").arg(server.modCount), card);
+        modsBadge->setProperty("class", "metaPill");
+        bottomRow->addWidget(modsBadge);
+    }
 
     bottomRow->addStretch(1);
 
-    // Connect button
-    auto* connectBtn = new QPushButton(tr("⚡ JETZT SPIELEN"), card);
-    connectBtn->setProperty("class", "connectButton");
+    auto* detailsBtn = new QPushButton(tr("Details"), card);
+    detailsBtn->setObjectName("cardDetailsBtn");
+    detailsBtn->setCursor(Qt::PointingHandCursor);
+    connect(detailsBtn, &QPushButton::clicked, this, [this, server]() {
+        emit serverDetailsRequested(server);
+    });
+    bottomRow->addWidget(detailsBtn);
+
+    auto* connectBtn = new QPushButton(tr("Connect"), card);
+    connectBtn->setObjectName("joinServerButton");
+    connectBtn->setCursor(Qt::PointingHandCursor);
     connect(connectBtn, &QPushButton::clicked, this, [this, server]() {
         onConnectClicked(server);
     });
     bottomRow->addWidget(connectBtn);
 
     cardLayout->addLayout(bottomRow);
-
     return card;
+}
+
+void SVLConnectPage::launchServer(const SVLServerModel& server)
+{
+    onConnectClicked(server);
 }
 
 void SVLConnectPage::onConnectClicked(const SVLServerModel& server)
 {
     auto* syncTask = new SVLModSyncTask(m_masterApiBaseUrl, server.serverKey, server.name, server.ip, server.port, this);
 
+    auto* overlay = new SVLLoadingOverlay(this->window());
+    overlay->setPrimaryStatus(tr("CONNECTING TO %1").arg(server.name.toUpper()));
+    overlay->setDetailStatus(tr("Verifying realm manifest and synchronizing client assets..."));
+
+    connect(syncTask, &SVLModSyncTask::status, overlay, [overlay](const QString& statusText) {
+        overlay->setPrimaryStatus(statusText);
+    });
+
+    connect(syncTask, &SVLModSyncTask::progress, overlay, [overlay](qint64 current, qint64 total) {
+        overlay->setProgress(static_cast<int>(current), static_cast<int>(total));
+    });
+
     connect(syncTask, &SVLModSyncTask::readyToLaunch, this, [this](MinecraftInstance* inst, const QString& ip, quint16 port) {
         emit launchRequested(inst, ip, port);
     });
 
-    ProgressDialog dlg(this);
-    dlg.setWindowTitle(tr("Sunveil Mod Synchronization"));
-    if (dlg.execWithTask(syncTask) != QDialog::Accepted) {
-        qDebug() << "[SVLConnectPage] Mod sync task cancelled or aborted.";
-    }
+    connect(syncTask, &Task::succeeded, overlay, [overlay]() {
+        overlay->accept();
+    });
+
+    connect(syncTask, &Task::failed, overlay, [this, overlay](const QString& reason) {
+        overlay->reject();
+        CustomMessageBox::selectable(this, tr("Connection Failed"), reason, QMessageBox::Critical)->show();
+    });
+
+    connect(overlay, &SVLLoadingOverlay::cancelRequested, syncTask, [syncTask]() {
+        syncTask->abort();
+    });
+
+    syncTask->start();
+    overlay->exec();
+    overlay->deleteLater();
 }

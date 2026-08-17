@@ -63,6 +63,8 @@ class InstanceTask;
 class LabeledToolButton;
 class Setting;
 class SVLConnectPage;
+class SVLRealmDetailPage;
+struct SVLServerModel;
 class QStackedWidget;
 
 namespace Ui {
@@ -86,6 +88,7 @@ class MainWindow : public QMainWindow {
     void processURLs(QList<QUrl> urls);
 
     void showServersView();
+    void showRealmDetails(const SVLServerModel& server);
     void showInstancesView();
     void launchSVLServer(MinecraftInstance* instance, const QString& ip, quint16 port);
     void onGameSessionEnded();
@@ -244,6 +247,7 @@ class MainWindow : public QMainWindow {
     Ui::MainWindow* ui;
     // these are managed by Qt's memory management model!
     SVLConnectPage* m_svlConnectPage = nullptr;
+    SVLRealmDetailPage* m_realmDetailPage = nullptr;
     QStackedWidget* m_centralStack = nullptr;
     QAction* actionShowServers = nullptr;
     QAction* actionShowInstances = nullptr;

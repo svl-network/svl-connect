@@ -274,7 +274,9 @@ bool SVLModSyncTask::prepareInstance(const QString& mcVersion, const QString& lo
     } else if (loader == "forge") {
         targetLoaderUid = "net.minecraftforge";
         targetLoaderName = "Forge";
-        if (targetLoaderVersion.isEmpty()) targetLoaderVersion = "52.1.16";
+        if (targetLoaderVersion.isEmpty()) {
+            targetLoaderVersion = mcVersion.startsWith("1.21.11") ? "61.2.1" : "52.1.16";
+        }
     }
 
     if (!targetLoaderUid.isEmpty()) {

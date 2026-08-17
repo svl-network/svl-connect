@@ -45,6 +45,7 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 #include "ui/pages/svl/SVLConnectPage.h"
+#include "ui/pages/svl/SVLRealmDetailPage.h"
 
 #include <QStackedWidget>
 #include <QDir>
@@ -218,6 +219,12 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     // hide, disable and show stuff
     {
+        menuBar()->setVisible(false);
+        menuBar()->hide();
+
+        ui->actionSettings->setText(tr("⚙ Settings"));
+        ui->actionSettings->setIcon(QIcon::fromTheme("settings"));
+
         ui->actionReportBug->setVisible(!BuildConfig.BUG_TRACKER_URL.isEmpty());
         ui->actionMATRIX->setVisible(!BuildConfig.MATRIX_URL.isEmpty());
         ui->actionDISCORD->setVisible(!BuildConfig.DISCORD_URL.isEmpty());
@@ -225,11 +232,18 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
 
         ui->actionCheckUpdate->setVisible(APPLICATION->updaterEnabled());
 
+        // Hide obsolete/legacy toolbar actions to keep navigation focused
+        ui->actionFoldersButton->setVisible(false);
+        ui->actionHelpButton->setVisible(false);
+        ui->actionCAT->setVisible(false);
+        ui->actionAddInstance->setVisible(false);
+
 #ifndef Q_OS_MAC
         ui->actionAddToPATH->setVisible(false);
 #endif
 
-        // disabled until we have an instance selected
+        // disabled and hidden until we switch to the instances view
+        ui->instanceToolBar->setVisible(false);
         ui->instanceToolBar->setEnabled(false);
         setInstanceActionsEnabled(false);
 
@@ -326,9 +340,15 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
 
         m_centralStack = new QStackedWidget(ui->centralWidget);
         m_svlConnectPage = new SVLConnectPage(this);
+        m_realmDetailPage = new SVLRealmDetailPage(this);
+
         connect(m_svlConnectPage, &SVLConnectPage::launchRequested, this, &MainWindow::launchSVLServer);
+        connect(m_svlConnectPage, &SVLConnectPage::serverDetailsRequested, this, &MainWindow::showRealmDetails);
+        connect(m_realmDetailPage, &SVLRealmDetailPage::backRequested, this, &MainWindow::showServersView);
+        connect(m_realmDetailPage, &SVLRealmDetailPage::connectRequested, m_svlConnectPage, &SVLConnectPage::launchServer);
 
         m_centralStack->addWidget(m_svlConnectPage);
+        m_centralStack->addWidget(m_realmDetailPage);
         m_centralStack->addWidget(view);
         m_centralStack->setCurrentWidget(m_svlConnectPage);
 
@@ -437,10 +457,10 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     setSelectedInstanceById(APPLICATION->settings()->get("SelectedInstance").toString());
 
-    // removing this looks stupid
-    view->setFocus();
-
     retranslateUi();
+
+    // Default to full-width Realms server browser
+    showServersView();
 }
 
 // macOS always has a native menu bar, so these fixes are not applicable
@@ -1671,8 +1691,10 @@ void MainWindow::instanceChanged(const QModelIndex& current, [[maybe_unused]] co
     QString id = current.data(InstanceList::InstanceIDRole).toString();
     m_selectedInstance = APPLICATION->instances()->getInstanceById(id);
     if (m_selectedInstance) {
-        ui->instanceToolBar->setEnabled(true);
-        setInstanceActionsEnabled(true);
+        bool onInstancesPage = (m_centralStack && m_centralStack->currentWidget() == view);
+        ui->instanceToolBar->setVisible(onInstancesPage);
+        ui->instanceToolBar->setEnabled(onInstancesPage);
+        setInstanceActionsEnabled(onInstancesPage);
         ui->actionLaunchInstance->setEnabled(m_selectedInstance->canLaunch());
 
         ui->actionKillInstance->setEnabled(m_selectedInstance->isRunning());
@@ -1795,6 +1817,20 @@ void MainWindow::showServersView()
     if (m_centralStack && m_svlConnectPage) {
         m_centralStack->setCurrentWidget(m_svlConnectPage);
         m_svlConnectPage->refreshServers();
+        ui->instanceToolBar->setVisible(false);
+        ui->instanceToolBar->setEnabled(false);
+        setInstanceActionsEnabled(false);
+    }
+}
+
+void MainWindow::showRealmDetails(const SVLServerModel& server)
+{
+    if (actionShowServers) actionShowServers->setChecked(true);
+    if (actionShowInstances) actionShowInstances->setChecked(false);
+    if (m_centralStack && m_realmDetailPage) {
+        m_realmDetailPage->setServer(server);
+        m_centralStack->setCurrentWidget(m_realmDetailPage);
+        ui->instanceToolBar->setVisible(false);
         ui->instanceToolBar->setEnabled(false);
         setInstanceActionsEnabled(false);
     }
@@ -1806,6 +1842,7 @@ void MainWindow::showInstancesView()
     if (actionShowInstances) actionShowInstances->setChecked(true);
     if (m_centralStack && view) {
         m_centralStack->setCurrentWidget(view);
+        ui->instanceToolBar->setVisible(true);
         if (m_selectedInstance) {
             ui->instanceToolBar->setEnabled(true);
             setInstanceActionsEnabled(true);

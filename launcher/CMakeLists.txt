@@ -1041,8 +1041,12 @@ SET(LAUNCHER_SOURCES
     # GUI - Sunveil Connect pages
     ui/pages/svl/SVLConnectPage.cpp
     ui/pages/svl/SVLConnectPage.h
+    ui/pages/svl/SVLRealmDetailPage.cpp
+    ui/pages/svl/SVLRealmDetailPage.h
 
     # GUI - dialogs
+    ui/dialogs/SVLLoadingOverlay.cpp
+    ui/dialogs/SVLLoadingOverlay.h
     ui/dialogs/SVLQuarantineDialog.cpp
     ui/dialogs/SVLQuarantineDialog.h
     ui/dialogs/AboutDialog.cpp
