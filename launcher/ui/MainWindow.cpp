@@ -44,7 +44,9 @@
 
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
+#include "ui/pages/svl/SVLConnectPage.h"
 
+#include <QStackedWidget>
 #include <QDir>
 #include <QFileInfo>
 #include <QUrl>
@@ -332,7 +334,34 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
         view->setSourceOfGroupCollapseStatus(
             [](const QString& groupName) -> bool { return APPLICATION->instances()->isGroupCollapsed(groupName); });
         connect(view, &InstanceView::groupStateChanged, APPLICATION->instances(), &InstanceList::on_GroupStateChanged);
-        ui->horizontalLayout->addWidget(view);
+
+        m_centralStack = new QStackedWidget(ui->centralWidget);
+        m_svlConnectPage = new SVLConnectPage(this);
+        connect(m_svlConnectPage, &SVLConnectPage::launchRequested, this, &MainWindow::launchSVLServer);
+
+        m_centralStack->addWidget(m_svlConnectPage);
+        m_centralStack->addWidget(view);
+        m_centralStack->setCurrentWidget(m_svlConnectPage);
+
+        ui->horizontalLayout->addWidget(m_centralStack);
+
+        actionShowServers = new QAction(QIcon::fromTheme("news"), tr("⚡ Realms"), this);
+        actionShowServers->setCheckable(true);
+        actionShowServers->setChecked(true);
+
+        actionShowInstances = new QAction(QIcon::fromTheme("instance"), tr("📦 Instances"), this);
+        actionShowInstances->setCheckable(true);
+
+        auto* navGroup = new QActionGroup(this);
+        navGroup->addAction(actionShowServers);
+        navGroup->addAction(actionShowInstances);
+
+        connect(actionShowServers, &QAction::triggered, this, &MainWindow::showServersView);
+        connect(actionShowInstances, &QAction::triggered, this, &MainWindow::showInstancesView);
+
+        ui->mainToolBar->insertAction(ui->actionAddInstance, actionShowServers);
+        ui->mainToolBar->insertAction(ui->actionAddInstance, actionShowInstances);
+        ui->mainToolBar->insertSeparator(ui->actionAddInstance);
     }
     // The cat background
     {
@@ -1794,3 +1823,36 @@ void MainWindow::refreshCurrentInstance()
     auto current = view->selectionModel()->currentIndex();
     instanceChanged(current, current);
 }
+
+void MainWindow::showServersView()
+{
+    if (m_centralStack && m_svlConnectPage) {
+        m_centralStack->setCurrentWidget(m_svlConnectPage);
+        m_svlConnectPage->refreshServers();
+        ui->instanceToolBar->setEnabled(false);
+        setInstanceActionsEnabled(false);
+    }
+}
+
+void MainWindow::showInstancesView()
+{
+    if (m_centralStack && view) {
+        m_centralStack->setCurrentWidget(view);
+        if (m_selectedInstance) {
+            ui->instanceToolBar->setEnabled(true);
+            setInstanceActionsEnabled(true);
+        }
+    }
+}
+
+void MainWindow::launchSVLServer(MinecraftInstance* instance, const QString& ip, quint16 port)
+{
+    if (!instance) {
+        return;
+    }
+    auto target = std::make_shared<MinecraftTarget>();
+    target->address = ip;
+    target->port = port;
+    APPLICATION->launch(instance, LaunchMode::Normal, nullptr, target);
+}
+

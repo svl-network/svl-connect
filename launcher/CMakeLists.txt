@@ -400,6 +400,8 @@ set(TASKS_SOURCES
     tasks/SequentialTask.cpp
     tasks/MultipleOptionsTask.h
     tasks/MultipleOptionsTask.cpp
+    tasks/SVLModSyncTask.h
+    tasks/SVLModSyncTask.cpp
 )
 
 set(SETTINGS_SOURCES
@@ -1036,7 +1038,13 @@ SET(LAUNCHER_SOURCES
     ui/pages/modplatform/modrinth/ModrinthResourcePages.cpp
     ui/pages/modplatform/modrinth/ModrinthResourcePages.h
 
+    # GUI - Sunveil Connect pages
+    ui/pages/svl/SVLConnectPage.cpp
+    ui/pages/svl/SVLConnectPage.h
+
     # GUI - dialogs
+    ui/dialogs/SVLQuarantineDialog.cpp
+    ui/dialogs/SVLQuarantineDialog.h
     ui/dialogs/AboutDialog.cpp
     ui/dialogs/AboutDialog.h
     ui/dialogs/ProfileSelectDialog.cpp

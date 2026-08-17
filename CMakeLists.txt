@@ -188,7 +188,7 @@ set(Launcher_LOGIN_CALLBACK_URL "https://prismlauncher.org/successful-login" CAC
 set(Launcher_LEGACY_FMLLIBS_BASE_URL "https://files.prismlauncher.org/fmllibs/" CACHE STRING "URL for legacy (<=1.5.2) FML Libraries.")
 
 ######## Set version numbers ########
-set(Launcher_VERSION_MAJOR 12)
+set(Launcher_VERSION_MAJOR 1)
 set(Launcher_VERSION_MINOR 0)
 set(Launcher_VERSION_PATCH 0)
 
@@ -369,7 +369,7 @@ include(ECMQtDeclareLoggingCategory)
 
 ####################################### Program Info #######################################
 
-set(Launcher_APP_BINARY_NAME "prismlauncher" CACHE STRING "Name of the Launcher binary")
+set(Launcher_APP_BINARY_NAME "svl-connect" CACHE STRING "Name of the Launcher binary")
 add_subdirectory(program_info)
 
 ####################################### Install layout #######################################

@@ -62,6 +62,8 @@ class KonamiCode;
 class InstanceTask;
 class LabeledToolButton;
 class Setting;
+class SVLConnectPage;
+class QStackedWidget;
 
 namespace Ui {
 class MainWindow;
@@ -219,6 +221,10 @@ class MainWindow : public QMainWindow {
 
     void refreshCurrentInstance();
 
+    void showServersView();
+    void showInstancesView();
+    void launchSVLServer(MinecraftInstance* instance, const QString& ip, quint16 port);
+
    private:
     void retranslateUi();
 
@@ -236,6 +242,11 @@ class MainWindow : public QMainWindow {
    private:
     Ui::MainWindow* ui;
     // these are managed by Qt's memory management model!
+    SVLConnectPage* m_svlConnectPage = nullptr;
+    QStackedWidget* m_centralStack = nullptr;
+    QAction* actionShowServers = nullptr;
+    QAction* actionShowInstances = nullptr;
+
     InstanceView* view = nullptr;
     InstanceProxyModel* proxymodel = nullptr;
     QToolButton* newsLabel = nullptr;
