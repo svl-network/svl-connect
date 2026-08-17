@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  PrismLaucher - Minecraft Launcher
+ *  SunveilLaucher - Minecraft Launcher
  *  Copyright (C) 2022 Rachel Powers <508861+Ryex@users.noreply.github.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -42,3 +42,4 @@ class SubTaskProgressBar : public QWidget {
    private:
     Ui::SubTaskProgressBar* ui;
 };
+

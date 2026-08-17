@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2022 Lenny McLennington <lenny@sneed.church>
  *  Copyright (C) 2022 Sefa Eyeoglu <contact@scrumplex.net>
  *  Copyright (C) 2022 TheKodeToad <TheKodeToad@proton.me>
@@ -234,3 +234,4 @@ QStringList GuiUtil::BrowseForFiles(QString context, QString caption, QString fi
 {
     return BrowseForFileInternal(context, caption, filter, defaultPath, parentWidget, false);
 }
+

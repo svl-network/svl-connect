@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2022 Sefa Eyeoglu <contact@scrumplex.net>
  *  Copyright (C) 2023 TheKodeToad <TheKodeToad@proton.me>
  *
@@ -1016,7 +1016,7 @@ void MainWindow::processURLs(QList<QUrl> urls)
                     dlUrlDialod.execWithTask(job.get());
                 }
 
-            } else if ((url.scheme() == BuildConfig.LAUNCHER_APP_BINARY_NAME || url.scheme() == "prismlauncher") && !isExternalURLImport) {
+            } else if ((url.scheme() == BuildConfig.LAUNCHER_APP_BINARY_NAME || url.scheme() == "SunveilConnect") && !isExternalURLImport) {
                 QVariantMap receivedData;
                 const QUrlQuery query(url.query());
                 const auto items = query.queryItems();
@@ -1024,10 +1024,10 @@ void MainWindow::processURLs(QList<QUrl> urls)
                     receivedData.insert(it->first, it->second);
                 emit APPLICATION->oauthReplyRecieved(receivedData);
                 continue;
-            } else if ((url.scheme() == "prismlauncher" || url.scheme() == BuildConfig.LAUNCHER_APP_BINARY_NAME) && isExternalURLImport) {
-                // PrismLauncher URL protocol modpack import
-                // works for any prism fork
-                // preferred import format: prismlauncher://import?url=ENCODED
+            } else if ((url.scheme() == "SunveilConnect" || url.scheme() == BuildConfig.LAUNCHER_APP_BINARY_NAME) && isExternalURLImport) {
+                // SunveilConnect URL protocol modpack import
+                // works for any Sunveil fork
+                // preferred import format: SunveilConnect://import?url=ENCODED
                 const auto host = url.host().toLower();
                 const auto path = url.path();
 
@@ -1041,7 +1041,7 @@ void MainWindow::processURLs(QList<QUrl> urls)
                     }
                 }
 
-                // alternative import format: prismlauncher://import/ENCODED
+                // alternative import format: SunveilConnect://import/ENCODED
                 if (encodedTarget.isEmpty()) {
                     QString p = path;
 
@@ -1378,7 +1378,7 @@ void MainWindow::globalSettingsClosed()
     updateStatusCenter();
     updateCatState();
     // This needs to be done to prevent UI elements disappearing in the event the config is changed
-    // but Prism Launcher exits abnormally, causing the window state to never be saved:
+    // but Sunveil Connect exits abnormally, causing the window state to never be saved:
     APPLICATION->settings()->set("MainWindowState", QString::fromUtf8(saveState().toBase64()));
     update();
 }
@@ -1790,6 +1790,8 @@ void MainWindow::refreshCurrentInstance()
 
 void MainWindow::showServersView()
 {
+    if (actionShowServers) actionShowServers->setChecked(true);
+    if (actionShowInstances) actionShowInstances->setChecked(false);
     if (m_centralStack && m_svlConnectPage) {
         m_centralStack->setCurrentWidget(m_svlConnectPage);
         m_svlConnectPage->refreshServers();
@@ -1800,6 +1802,8 @@ void MainWindow::showServersView()
 
 void MainWindow::showInstancesView()
 {
+    if (actionShowServers) actionShowServers->setChecked(false);
+    if (actionShowInstances) actionShowInstances->setChecked(true);
     if (m_centralStack && view) {
         m_centralStack->setCurrentWidget(view);
         if (m_selectedInstance) {
@@ -1819,4 +1823,13 @@ void MainWindow::launchSVLServer(MinecraftInstance* instance, const QString& ip,
     target->port = port;
     APPLICATION->launch(instance, LaunchMode::Normal, target);
 }
+
+void MainWindow::onGameSessionEnded()
+{
+    showServersView();
+    if (m_svlConnectPage) {
+        m_svlConnectPage->refreshServers();
+    }
+}
+
 

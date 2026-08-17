@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2022 Rachel Powers <508861+Ryex@users.noreply.github.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -56,3 +56,4 @@ class ShaderPack : public Resource {
 
     ShaderPackFormat m_pack_format = ShaderPackFormat::INVALID;
 };
+

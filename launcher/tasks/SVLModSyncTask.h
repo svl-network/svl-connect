@@ -43,6 +43,7 @@ private:
     void processManifest(const QByteArray& data);
     bool prepareInstance(const QString& mcVersion, const QString& loader, const QString& loaderVersion);
     void performCleanSyncAndDownload();
+    void ensureServerInServersDat();
     void finalizeAndLaunch();
 
     QString m_masterApiBaseUrl;

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2022 dada513 <dada513@protonmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -85,3 +85,4 @@ bool isSnap()
 }
 
 }  // namespace DesktopServices
+

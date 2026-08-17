@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (c) 2022 flowln <flowlnlnln@gmail.com>
  *  Copyright (C) 2022 Sefa Eyeoglu <contact@scrumplex.net>
  *  Copyright (c) 2023 Trial97 <alexandru.tripon97@gmail.com>
@@ -353,3 +353,4 @@ void Mod::setRequiresCount(int value)
 {
     m_requiresCount = value;
 }
+

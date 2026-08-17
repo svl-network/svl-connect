@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (c) 2024 Trial97 <alexandru.tripon97@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -275,3 +275,4 @@ void MSADeviceCodeStep::authenticationFinished(QByteArray* response)
     m_data->msaToken.token = rsp.access_token;
     emit finished(AccountTaskState::STATE_WORKING, tr("Got MSA token"));
 }
+

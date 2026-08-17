@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2022 Sefa Eyeoglu <contact@scrumplex.net>
  *  Copyright (c) 2023-2024 Trial97 <alexandru.tripon97@gmail.com>
  *
@@ -105,3 +105,4 @@ bool extractFile(QString fileCompressed, QString file, QString dir);
  */
 bool collectFileListRecursively(const QString& rootDir, const QString& subDir, QFileInfoList* files, FilterFileFunction excludeFilter);
 }  // namespace MMCZip
+

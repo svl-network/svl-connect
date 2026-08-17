@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2022 Sefa Eyeoglu <contact@scrumplex.net>
  *  Copyright (C) 2022 Jamie Mansfield <jmansfield@cadixdev.org>
  *  Copyright (C) 2023 TheKodeToad <TheKodeToad@proton.me>
@@ -44,6 +44,7 @@
 #include "settings/SettingsObject.h"
 
 #include "FileSystem.h"
+#include "HardwareInfo.h"
 #include "MMCTime.h"
 #include "java/JavaVersion.h"
 
@@ -618,6 +619,33 @@ QStringList MinecraftInstance::javaArguments()
 
     int min = settings()->get("MinMemAlloc").toInt();
     int max = settings()->get("MaxMemAlloc").toInt();
+
+    // Dynamic RAM fallback: clamp allocation gracefully if host free memory is lower than requested max
+    uint64_t availableRam = HardwareInfo::availableRamMiB();
+    if (availableRam > 0) {
+        int safeLimit = static_cast<int>(availableRam * 0.85);
+        if (max > safeLimit && safeLimit >= 1024) {
+            int fallbackMax = max;
+            if (max >= 4096) {
+                if (safeLimit >= 3072) {
+                    fallbackMax = 3072;
+                } else if (safeLimit >= 2048) {
+                    fallbackMax = 2048;
+                } else {
+                    fallbackMax = std::max(1024, safeLimit);
+                }
+            } else {
+                fallbackMax = std::max(1024, safeLimit);
+            }
+            qWarning() << "[MinecraftInstance] Host free RAM (" << availableRam << "MiB) is lower than MaxMemAlloc (" << max
+                       << "MiB). Clamping to" << fallbackMax << "MiB.";
+            max = fallbackMax;
+            if (min > max) {
+                min = max;
+            }
+        }
+    }
+
     if (min < max) {
         args << QString("-Xms%1m").arg(min);
         args << QString("-Xmx%1m").arg(max);
@@ -1355,3 +1383,4 @@ QList<Mod*> MinecraftInstance::getJarMods() const
 }
 
 #include "MinecraftInstance.moc"
+

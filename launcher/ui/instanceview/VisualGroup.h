@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2023 Tayou <git@tayou.org>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -109,3 +109,4 @@ struct VisualGroup {
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(VisualGroup::HitResults)
+

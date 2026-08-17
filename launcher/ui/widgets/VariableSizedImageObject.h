@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (c) 2022 flowln <flowlnlnln@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -71,3 +71,4 @@ class VariableSizedImageObject final : public QObject, public QTextObjectInterfa
 
     QSet<QUrl> m_fetching_images;
 };
+

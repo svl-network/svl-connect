@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (c) 2022 flowln <flowlnlnln@gmail.com>
  *  Copyright (C) 2022 Sefa Eyeoglu <contact@scrumplex.net>
  *
@@ -58,10 +58,10 @@ public:
         if (str.isEmpty()) {
             return str;
         }
-        str.replace("Prism Launcher", BuildConfig.LAUNCHER_DISPLAYNAME);
-        str.replace("Prism-Launcher", BuildConfig.LAUNCHER_DISPLAYNAME);
-        str.replace("PrismLauncher", BuildConfig.LAUNCHER_NAME);
-        str.replace("prismlauncher", BuildConfig.LAUNCHER_APP_BINARY_NAME);
+        str.replace("Sunveil Connect", BuildConfig.LAUNCHER_DISPLAYNAME);
+        str.replace("Sunveil-Launcher", BuildConfig.LAUNCHER_DISPLAYNAME);
+        str.replace("SunveilConnect", BuildConfig.LAUNCHER_NAME);
+        str.replace("SunveilConnect", BuildConfig.LAUNCHER_APP_BINARY_NAME);
         str.replace("PolyMC", BuildConfig.LAUNCHER_NAME);
         return str;
     }
@@ -669,3 +669,4 @@ void TranslationsModel::indexFailed(const QString& reason) const
     qCritical() << "Translations Index Download Failed:" << reason;
     d->m_indexJob.reset();
 }
+

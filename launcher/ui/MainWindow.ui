@@ -460,7 +460,7 @@
     <iconset theme="launcher"/>
    </property>
    <property name="text">
-    <string>Prism Launcher (zip)</string>
+    <string>Sunveil Connect (zip)</string>
    </property>
   </action>
   <action name="actionExportInstanceMrPack">
@@ -785,3 +785,4 @@
  <resources/>
  <connections/>
 </ui>
+

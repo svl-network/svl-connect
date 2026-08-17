@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2025 TheKodeToad <TheKodeToad@proton.me>
  *  Copyright (C) 2022 Tayou <git@tayou.org>
  *
@@ -56,3 +56,4 @@ class AppearanceWidget : public QWidget {
     QTextCharFormat m_defaultFormat;
     bool m_themesOnly;
 };
+

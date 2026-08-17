@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  PrismLauncher - Minecraft Launcher
+ *  SunveilConnect - Minecraft Launcher
  *  Copyright (C) 2022 Jan Drögehoff <sentrycraft123@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -27,3 +27,4 @@ QString findMangoHud();
 
 QString find(QString libName);
 }  // namespace LibraryUtils
+

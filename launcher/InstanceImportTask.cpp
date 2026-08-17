@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2022 Sefa Eyeoglu <contact@scrumplex.net>
  *  Copyright (c) 2022 flowln <flowlnlnln@gmail.com>
  *
@@ -450,3 +450,4 @@ void InstanceImportTask::processModrinth()
     setAbortable(true);
     m_task->start();
 }
+

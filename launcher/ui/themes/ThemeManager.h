@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2024 Tayou <git@tayou.org>
  *  Copyright (C) 2024 TheKodeToad <TheKodeToad@proton.me>
  *
@@ -94,3 +94,4 @@ class ThemeManager {
     const QStringList builtinIcons{"pe_colored", "pe_light", "pe_dark", "pe_blue",    "breeze_light", "breeze_dark",
                                    "OSX",        "iOS",      "flat",    "flat_white", "multimc"};
 };
+

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2023 Joshua Goins <josh@redstrate.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -22,3 +22,4 @@
 #include <QString>
 
 QString markdownToHTML(const QString& markdown);
+

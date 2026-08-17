@@ -10,7 +10,7 @@ set(patches
   adjust-args.patch
   remove-freebsd-pcfile-specialization.patch
   fix-libcpp-enable-assertions.patch # https://github.com/mesonbuild/meson/pull/14548, Remove in 1.8.3
-  universal-osx.patch # NOTE(@getchoo): THIS IS THE ONLY CHANGE NEEDED FOR PRISM
+  universal-osx.patch # NOTE(@getchoo): THIS IS THE ONLY CHANGE NEEDED FOR Sunveil
 )
 set(scripts
   vcpkg-port-config.cmake
@@ -43,3 +43,4 @@ configure_file("${CMAKE_CURRENT_LIST_DIR}/vcpkg-port-config.cmake" "${CURRENT_PA
 vcpkg_install_copyright(FILE_LIST "${VCPKG_ROOT_DIR}/LICENSE.txt")
 
 include("${CURRENT_PACKAGES_DIR}/share/${PORT}/vcpkg-port-config.cmake")
+

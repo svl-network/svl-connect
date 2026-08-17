@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2026 Mark Deneen <mdeneen@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -27,3 +27,4 @@ bool ToolTipFilter::eventFilter(QObject* obj, QEvent* ev)
         return QObject::eventFilter(obj, ev);
     }
 }
+

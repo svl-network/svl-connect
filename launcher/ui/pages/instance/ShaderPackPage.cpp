@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-only AND Apache-2.0
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (c) 2022 Jamie Mansfield <jmansfield@cadixdev.org>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -235,3 +235,4 @@ void ShaderPackPage::changeShaderPackVersion()
     m_downloadDialog->setResourceMetadata(resource.metadata());
     m_downloadDialog->open();
 }
+

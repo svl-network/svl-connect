@@ -59,9 +59,9 @@
        y2="4"
        gradientUnits="userSpaceOnUse"
        gradientTransform="translate(2,2)" /></defs><title
-     id="title132">Prism Launcher Logo</title><metadata
+     id="title132">Sunveil Connect Logo</title><metadata
      id="metadata166"><rdf:RDF><cc:Work
-         rdf:about=""><dc:title>Prism Launcher Logo</dc:title><dc:date>19/10/2022</dc:date><dc:creator><cc:Agent><dc:title>Prism Launcher</dc:title></cc:Agent></dc:creator><dc:contributor><cc:Agent><dc:title>AutiOne, Boba, ely, Fulmine, gon sawa, Pankakes, tobimori, Zeke</dc:title></cc:Agent></dc:contributor><dc:source>https://github.com/PrismLauncher/PrismLauncher</dc:source><dc:rights><cc:Agent><dc:title>CC BY-SA 4.0</dc:title></cc:Agent></dc:rights><dc:publisher><cc:Agent><dc:title>Prism Launcher</dc:title></cc:Agent></dc:publisher></cc:Work></rdf:RDF></metadata><g
+         rdf:about=""><dc:title>Sunveil Connect Logo</dc:title><dc:date>19/10/2022</dc:date><dc:creator><cc:Agent><dc:title>Sunveil Connect</dc:title></cc:Agent></dc:creator><dc:contributor><cc:Agent><dc:title>AutiOne, Boba, ely, Fulmine, gon sawa, Pankakes, tobimori, Zeke</dc:title></cc:Agent></dc:contributor><dc:source>https://github.com/SunveilConnect/SunveilConnect</dc:source><dc:rights><cc:Agent><dc:title>CC BY-SA 4.0</dc:title></cc:Agent></dc:rights><dc:publisher><cc:Agent><dc:title>Sunveil Connect</dc:title></cc:Agent></dc:publisher></cc:Work></rdf:RDF></metadata><g
      id="i_grass"
      transform="translate(-420,-4)"><path
        id="rect15088-9-1-7"
@@ -82,3 +82,4 @@
        id="rect24023"
        style="fill:url(#linearGradient29507);fill-opacity:1;stroke:none;paint-order:stroke markers fill;stop-color:#000000"
        d="m 425,6 c -1.662,0 -3,1.3380037 -3,3 v 3 2 h 2 v -2 h 2 v 2 h 4 v 2 h 2 v -2 -2 -2 h 2 v 2 2 h 2 v -2 h 2 v 2 2 h 2 v -2 h 2 V 9 c 0,-1.6619983 -1.338,-3 -3,-3 h -7 z" /></g></svg>
+

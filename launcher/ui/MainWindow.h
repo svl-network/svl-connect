@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2022 Sefa Eyeoglu <contact@scrumplex.net>
  *  Copyright (C) 2023 TheKodeToad <TheKodeToad@proton.me>
  *
@@ -84,6 +84,11 @@ class MainWindow : public QMainWindow {
     void updatesAllowedChanged(bool allowed);
 
     void processURLs(QList<QUrl> urls);
+
+    void showServersView();
+    void showInstancesView();
+    void launchSVLServer(MinecraftInstance* instance, const QString& ip, quint16 port);
+    void onGameSessionEnded();
    signals:
     void isClosing();
 
@@ -221,10 +226,6 @@ class MainWindow : public QMainWindow {
 
     void refreshCurrentInstance();
 
-    void showServersView();
-    void showInstancesView();
-    void launchSVLServer(MinecraftInstance* instance, const QString& ip, quint16 port);
-
    private:
     void retranslateUi();
 
@@ -267,3 +268,4 @@ class MainWindow : public QMainWindow {
     // managed by the application object
     Task* m_versionLoadTask = nullptr;
 };
+

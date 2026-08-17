@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-only AND Apache-2.0
 
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2022-2023 Sefa Eyeoglu <contact@scrumplex.net>
  *  Copyright (C) 2022 TheKodeToad <TheKodeToad@proton.me>
  *
@@ -94,7 +94,7 @@ class PackProfile : public QAbstractListModel {
     /// install a jar/zip as a replacement for the main jar
     void installCustomJar(QString selectedFile);
 
-    /// install MMC/Prism component files
+    /// install MMC/Sunveil component files
     bool installComponents(QStringList selectedFiles);
 
     /// install Java agent files
@@ -191,3 +191,4 @@ class PackProfile : public QAbstractListModel {
    private: /* data */
     std::unique_ptr<PackProfileData> d;
 };
+

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2024 Tayou <git@tayou.org>
  *  Copyright (C) 2024 TheKodeToad <TheKodeToad@proton.me>
  *
@@ -74,3 +74,4 @@ class CustomTheme : public ITheme {
      */
     QString m_tooltip = "";
 };
+

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (c) 2024 Leia uwu <leia@tutamail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -63,3 +63,4 @@ bool PrintServers::canAbort() const
 {
     return true;
 }
+

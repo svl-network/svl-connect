@@ -1,6 +1,6 @@
 /// SPDX-License-Identifier: GPL-3.0-only
 /*
- *  PrismLaucher - Minecraft Launcher
+ *  SunveilLaucher - Minecraft Launcher
  *  Copyright (C) 2023 Rachel Powers <508861+Ryex@users.noreply.github.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -286,3 +286,4 @@ void ProgressDialog::closeEvent(QCloseEvent* e)
         QDialog::closeEvent(e);
     }
 }
+

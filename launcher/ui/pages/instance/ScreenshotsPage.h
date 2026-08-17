@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (c) 2022 Jamie Mansfield <jmansfield@cadixdev.org>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -97,3 +97,4 @@ class ScreenshotsPage : public QMainWindow, public BasePage {
 
     std::shared_ptr<Setting> m_wide_bar_setting = nullptr;
 };
+

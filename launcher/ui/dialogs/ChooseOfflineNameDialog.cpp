@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2025 Octol1ttle <l1ttleofficial@outlook.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -73,3 +73,4 @@ void ChooseOfflineNameDialog::on_allowInvalidUsernames_checkStateChanged(const Q
     ui->usernameTextBox->setValidator(checkState == Qt::Checked ? nullptr : m_usernameValidator);
     updateAcceptAllowed(getUsername());
 }
+

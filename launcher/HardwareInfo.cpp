@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2026 Octol1ttle <l1ttleofficial@outlook.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -355,3 +355,4 @@ QStringList HardwareInfo::gpuInfo()
     return { "GPU discovery failed: not implemented for this OS" };
 }
 #endif
+

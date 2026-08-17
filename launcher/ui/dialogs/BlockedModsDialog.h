@@ -5,7 +5,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2022 Sefa Eyeoglu <contact@scrumplex.net>
  *  Copyright (C) 2022 Rachel Powers <508861+Ryex@users.noreply.github.com>
  *  Copyright (C) 2022 kumquat-ir <66188216+kumquat-ir@users.noreply.github.com>
@@ -96,3 +96,4 @@ class BlockedModsDialog : public QDialog {
 };
 
 QDebug operator<<(QDebug debug, const BlockedMod& m);
+

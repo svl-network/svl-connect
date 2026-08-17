@@ -1,7 +1,7 @@
 
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2023 Rachel Powers <508861+Ryex@users.noreply.github.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -22,3 +22,4 @@
 
 Q_LOGGING_CATEGORY(instanceProfileC, "launcher.instance.profile")
 Q_LOGGING_CATEGORY(instanceProfileResolveC, "launcher.instance.profile.resolve")
+

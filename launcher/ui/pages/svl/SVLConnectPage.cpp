@@ -40,101 +40,116 @@ void SVLConnectPage::setupUI()
 {
     setStyleSheet(R"(
         QWidget#SVLConnectPage {
-            background-color: #11111B;
-            color: #CDD6F4;
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: #080C0E;
+            color: #F8FAFC;
+            font-family: 'Segoe UI', -apple-system, sans-serif;
         }
         QLineEdit#searchEdit {
-            background-color: #1E1E2E;
-            border: 1px solid #313244;
-            border-radius: 6px;
-            padding: 8px 14px;
-            color: #CDD6F4;
+            background-color: #0E1418;
+            border: 1px solid #1E2B33;
+            border-radius: 8px;
+            padding: 10px 16px;
+            color: #F8FAFC;
             font-size: 13px;
         }
         QLineEdit#searchEdit:focus {
-            border: 1px solid #F59E0B;
+            border: 1px solid #00E599;
+            background-color: #121A20;
         }
         QPushButton#refreshButton {
-            background-color: #1E1E2E;
-            border: 1px solid #313244;
-            border-radius: 6px;
-            padding: 8px 16px;
-            color: #CDD6F4;
+            background-color: #0E1418;
+            border: 1px solid #1E2B33;
+            border-radius: 8px;
+            padding: 10px 20px;
+            color: #00E599;
             font-weight: bold;
             font-size: 13px;
         }
         QPushButton#refreshButton:hover {
-            background-color: #313244;
-            border-color: #45475A;
+            background-color: #151F26;
+            border-color: #00E599;
+            color: #00FFAC;
+        }
+        QPushButton#refreshButton:pressed {
+            background-color: #0E1418;
         }
         QScrollArea {
             border: none;
             background-color: transparent;
         }
-        QFrame.serverCard {
-            background-color: #181825;
-            border: 1px solid #313244;
-            border-radius: 8px;
-            padding: 12px;
+        QFrame[serverCard="true"] {
+            background-color: #0E1418;
+            border: 1px solid #1E2B33;
+            border-radius: 12px;
         }
-        QFrame.serverCard:hover {
-            border: 1px solid #45475A;
-            background-color: #1E1E2E;
+        QFrame[serverCard="true"]:hover {
+            border: 1px solid #00E599;
+            background-color: #121A20;
         }
         QLabel.serverTitle {
-            font-size: 16px;
-            font-weight: bold;
-            color: #F59E0B;
+            font-size: 17px;
+            font-weight: 700;
+            color: #FFB800;
+        }
+        QLabel.playerCount {
+            font-size: 13px;
+            font-weight: 600;
+            color: #94A3B8;
         }
         QLabel.serverMotd {
-            font-size: 12px;
-            color: #A6ADC8;
+            font-size: 13px;
+            color: #94A3B8;
+            line-height: 1.4;
         }
         QLabel.badgeTag {
-            background-color: #313244;
-            color: #BAC2DE;
-            border-radius: 4px;
-            padding: 3px 8px;
+            background-color: #151F26;
+            color: #94A3B8;
+            border: 1px solid #233440;
+            border-radius: 10px;
+            padding: 3px 10px;
             font-size: 11px;
             font-weight: bold;
         }
         QLabel.verifiedBadge {
-            background-color: #064E3B;
-            color: #10B981;
-            border: 1px solid #059669;
-            border-radius: 4px;
-            padding: 3px 8px;
+            background-color: rgba(0, 229, 153, 0.12);
+            color: #00E599;
+            border: 1px solid #00E599;
+            border-radius: 10px;
+            padding: 3px 10px;
             font-size: 11px;
             font-weight: bold;
         }
         QLabel.communityBadge {
-            background-color: #78350F;
+            background-color: rgba(245, 158, 11, 0.12);
             color: #F59E0B;
-            border: 1px solid #D97706;
-            border-radius: 4px;
-            padding: 3px 8px;
+            border: 1px solid #F59E0B;
+            border-radius: 10px;
+            padding: 3px 10px;
             font-size: 11px;
             font-weight: bold;
         }
         QPushButton.connectButton {
-            background-color: #F59E0B;
-            color: #11111B;
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00E599, stop:1 #00C480);
+            color: #080C0E;
             border: none;
-            border-radius: 6px;
-            padding: 9px 22px;
+            border-radius: 8px;
+            padding: 9px 24px;
             font-weight: bold;
             font-size: 13px;
         }
         QPushButton.connectButton:hover {
-            background-color: #D97706;
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00FFAC, stop:1 #00E599);
+            color: #080C0E;
+        }
+        QPushButton.connectButton:pressed {
+            background: #00C480;
         }
     )");
 
     setObjectName("SVLConnectPage");
     auto* mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(20, 20, 20, 20);
-    mainLayout->setSpacing(14);
+    mainLayout->setContentsMargins(24, 20, 24, 20);
+    mainLayout->setSpacing(16);
 
     // Header Controls
     auto* headerLayout = new QHBoxLayout();
@@ -155,7 +170,7 @@ void SVLConnectPage::setupUI()
 
     // Status / Count bar
     m_statusLabel = new QLabel(tr("Fetching active servers from Sunveil Network..."), this);
-    m_statusLabel->setStyleSheet("color: #6C7086; font-size: 12px; font-weight: bold;");
+    m_statusLabel->setStyleSheet("color: #64748B; font-size: 12px; font-weight: bold;");
     mainLayout->addWidget(m_statusLabel);
 
     // Scroll Area for Server Cards
@@ -166,7 +181,7 @@ void SVLConnectPage::setupUI()
     scrollContainer->setStyleSheet("background-color: transparent;");
     m_cardsLayout = new QVBoxLayout(scrollContainer);
     m_cardsLayout->setContentsMargins(0, 0, 0, 0);
-    m_cardsLayout->setSpacing(10);
+    m_cardsLayout->setSpacing(12);
     m_cardsLayout->addStretch();
 
     m_scrollArea->setWidget(scrollContainer);
@@ -279,7 +294,7 @@ void SVLConnectPage::renderServerCards()
     if (m_filteredServers.isEmpty()) {
         auto* emptyLabel = new QLabel(tr("No active Sunveil servers online. Click 'Refresh' to poll again."), this);
         emptyLabel->setAlignment(Qt::AlignCenter);
-        emptyLabel->setStyleSheet("color: #585B70; font-size: 14px; padding: 40px;");
+        emptyLabel->setStyleSheet("color: #64748B; font-size: 14px; padding: 40px;");
         m_cardsLayout->addWidget(emptyLabel);
         m_cardsLayout->addStretch();
         return;
@@ -294,72 +309,71 @@ void SVLConnectPage::renderServerCards()
 QWidget* SVLConnectPage::createServerCard(const SVLServerModel& server)
 {
     auto* card = new QFrame(this);
-    card->setProperty("class", "serverCard");
+    card->setProperty("serverCard", true);
 
-    auto* cardLayout = new QHBoxLayout(card);
-    cardLayout->setContentsMargins(14, 12, 14, 12);
-    cardLayout->setSpacing(16);
+    auto* cardLayout = new QVBoxLayout(card);
+    cardLayout->setContentsMargins(18, 16, 18, 16);
+    cardLayout->setSpacing(10);
 
-    // Left info block
-    auto* infoLayout = new QVBoxLayout();
-    infoLayout->setSpacing(5);
+    // 1. Top Row: Server Title on left, Player Count on right
+    auto* topRow = new QHBoxLayout();
+    topRow->setSpacing(12);
 
     auto* nameLabel = new QLabel(server.name, card);
     nameLabel->setProperty("class", "serverTitle");
-    infoLayout->addWidget(nameLabel);
+    topRow->addWidget(nameLabel, 1);
 
+    auto* playersLabel = new QLabel(QString("🟢 %1 / %2").arg(QString::number(server.players), QString::number(server.maxPlayers)), card);
+    playersLabel->setProperty("class", "playerCount");
+    playersLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    topRow->addWidget(playersLabel);
+
+    cardLayout->addLayout(topRow);
+
+    // 2. Middle Row: MOTD Description
     if (!server.motd.isEmpty()) {
         auto* motdLabel = new QLabel(server.motd, card);
         motdLabel->setProperty("class", "serverMotd");
         motdLabel->setWordWrap(true);
-        infoLayout->addWidget(motdLabel);
+        cardLayout->addWidget(motdLabel);
     }
 
-    // Badges Row
-    auto* badgesLayout = new QHBoxLayout();
-    badgesLayout->setSpacing(8);
+    // 3. Bottom Row: Badges on left, Connect CTA button on right
+    auto* bottomRow = new QHBoxLayout();
+    bottomRow->setSpacing(8);
 
-    auto* loaderBadge = new QLabel(QString("%1 %2").arg(server.loader.toUpper(), server.mcVersion), card);
-    loaderBadge->setProperty("class", "badgeTag");
-    badgesLayout->addWidget(loaderBadge);
-
-    auto* modsBadge = new QLabel(tr("📦 %1 Mods").arg(server.modCount), card);
-    modsBadge->setProperty("class", "badgeTag");
-    badgesLayout->addWidget(modsBadge);
-
+    // Verified / Community badge
     auto* statusBadge = new QLabel(card);
     if (server.verified) {
-        statusBadge->setText(tr("🟢 Verified (Official Modrinth)"));
+        statusBadge->setText(tr("🟢 Verified"));
         statusBadge->setProperty("class", "verifiedBadge");
     } else {
-        statusBadge->setText(tr("🟡 Community Content"));
+        statusBadge->setText(tr("🟡 Community"));
         statusBadge->setProperty("class", "communityBadge");
     }
-    badgesLayout->addWidget(statusBadge);
+    bottomRow->addWidget(statusBadge);
 
-    badgesLayout->addStretch();
-    infoLayout->addLayout(badgesLayout);
+    // Loader & Version badge
+    auto* loaderBadge = new QLabel(QString("%1 %2").arg(server.loader.toUpper(), server.mcVersion), card);
+    loaderBadge->setProperty("class", "badgeTag");
+    bottomRow->addWidget(loaderBadge);
 
-    cardLayout->addLayout(infoLayout, 1);
+    // Mods count badge
+    auto* modsBadge = new QLabel(tr("📦 %1 Mods").arg(server.modCount), card);
+    modsBadge->setProperty("class", "badgeTag");
+    bottomRow->addWidget(modsBadge);
 
-    // Right Action block
-    auto* actionLayout = new QVBoxLayout();
-    actionLayout->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    actionLayout->setSpacing(6);
+    bottomRow->addStretch(1);
 
-    auto* playersLabel = new QLabel(tr("👥 %1 / %2").arg(QString::number(server.players), QString::number(server.maxPlayers)), card);
-    playersLabel->setStyleSheet("color: #BAC2DE; font-weight: bold; font-size: 13px;");
-    playersLabel->setAlignment(Qt::AlignRight);
-    actionLayout->addWidget(playersLabel);
-
-    auto* connectBtn = new QPushButton(tr("⚡ Connect"), card);
+    // Connect button
+    auto* connectBtn = new QPushButton(tr("⚡ JETZT SPIELEN"), card);
     connectBtn->setProperty("class", "connectButton");
     connect(connectBtn, &QPushButton::clicked, this, [this, server]() {
         onConnectClicked(server);
     });
-    actionLayout->addWidget(connectBtn);
+    bottomRow->addWidget(connectBtn);
 
-    cardLayout->addLayout(actionLayout);
+    cardLayout->addLayout(bottomRow);
 
     return card;
 }

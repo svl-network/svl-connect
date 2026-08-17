@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2025 TheKodeToad <TheKodeToad@proton.me>
  *  Copyright (C) 2022 Tayou <git@tayou.org>
  *
@@ -286,3 +286,4 @@ void AppearanceWidget::updateCatPreview()
     if (effect)
         effect->setOpacity(m_ui->catOpacitySlider->value() / 100.0);
 }
+

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  PrismLauncher - Minecraft Launcher
+ *  SunveilConnect - Minecraft Launcher
  *  Copyright (c) 2022 flowln <flowlnlnln@gmail.com>
  *  Copyright (c) 2023 Rachel Powers <508861+Ryex@users.noreply.github.com>
  *
@@ -218,3 +218,4 @@ class Task : public QObject, public QRunnable {
     bool m_can_abort = false;
     QUuid m_uid;
 };
+

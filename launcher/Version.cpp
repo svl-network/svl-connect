@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2023 flowln <flowlnlnln@gmail.com>
  *  Copyright (C) 2022 Sefa Eyeoglu <contact@scrumplex.net>
  *  Copyright (c) 2026 Trial97 <alexandru.tripon97@gmail.com>
@@ -155,3 +155,4 @@ std::strong_ordering Version::operator<=>(const Version& other) const
     }
     return std::strong_ordering::equal;
 }
+

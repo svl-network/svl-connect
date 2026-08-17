@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2022 Sefa Eyeoglu <contact@scrumplex.net>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -69,7 +69,7 @@ bool isSchemeHandlerRegistered()
         settings.setValue("URL Protocol", "");
         settings.setValue("shell/open/command/.", QString("\"%1\" \"%2\"").arg(QDir::toNativeSeparators(QCoreApplication::applicationFilePath()), "%1"));
     };
-    checkAndRegister("prismlauncher");
+    checkAndRegister("SunveilConnect");
     checkAndRegister(BuildConfig.LAUNCHER_APP_BINARY_NAME);
 #endif
     return true;
@@ -214,3 +214,4 @@ void MSAStep::perform()
 }
 
 #include "MSAStep.moc"
+

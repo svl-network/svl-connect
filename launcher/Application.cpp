@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-only AND Apache-2.0
 
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2022 Sefa Eyeoglu <contact@scrumplex.net>
  *  Copyright (C) 2022 Lenny McLennington <lenny@sneed.church>
  *  Copyright (C) 2022 Tayou <git@tayou.org>
@@ -445,7 +445,7 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
     m_dataPath = dataPath;
 
     /*
-     * Establish the mechanism for communication with an already running PrismLauncher that uses the same data path.
+     * Establish the mechanism for communication with an already running SunveilConnect that uses the same data path.
      * If there is one, tell it what the user actually wanted to do and exit.
      * We want to initialize this before logging to avoid messing with the log of a potential already running copy.
      */
@@ -1091,7 +1091,7 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
                               "\n"
                               "This likely means that a update attempt failed. Please ensure your installation is in working order before "
                               "proceeding.\n"
-                              "Check the Prism Launcher updater log at: \n"
+                              "Check the Sunveil Connect updater log at: \n"
                               "%7\n"
                               "for details on the last update attempt.\n"
                               "\n"
@@ -1121,13 +1121,13 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
             }
         }
 
-        auto update_fail_marker = QFileInfo(FS::PathCombine(m_dataPath, ".prism_launcher_update.fail"));
+        auto update_fail_marker = QFileInfo(FS::PathCombine(m_dataPath, ".Sunveil_launcher_update.fail"));
         if (update_fail_marker.exists()) {
             auto infoMsg = tr("An update attempt failed\n"
                               "\n"
                               "Please ensure your installation is in working order before "
                               "proceeding.\n"
-                              "Check the Prism Launcher updater log at: \n"
+                              "Check the Sunveil Connect updater log at: \n"
                               "%1\n"
                               "for details on the last update attempt.")
                                .arg(update_log_path);
@@ -1153,12 +1153,12 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
             }
         }
 
-        auto update_success_marker = QFileInfo(FS::PathCombine(m_dataPath, ".prism_launcher_update.success"));
+        auto update_success_marker = QFileInfo(FS::PathCombine(m_dataPath, ".Sunveil_launcher_update.success"));
         if (update_success_marker.exists()) {
             auto infoMsg = tr("Update succeeded\n"
                               "\n"
                               "You are now running %1 .\n"
-                              "Check the Prism Launcher updater log at: \n"
+                              "Check the Sunveil Connect updater log at: \n"
                               "%2\n"
                               "for details.")
                                .arg(BuildConfig.printableVersionString())
@@ -1403,7 +1403,7 @@ void Application::performMainStartupAction()
         m_updater.reset(new MacSparkleUpdater());
 #endif
 #else
-        m_updater.reset(new PrismExternalUpdater(m_mainWindow, m_rootPath, m_dataPath));
+        m_updater.reset(new SunveilExternalUpdater(m_mainWindow, m_rootPath, m_dataPath));
 #endif
         qDebug() << "<> Updater started.";
     }
@@ -1656,6 +1656,19 @@ void Application::controllerFinished()
     }
     extras.controller.reset();
     subRunningInstance();
+
+    // FiveM-style return: unminimize & raise main window and refresh realm status
+    if (m_mainWindow) {
+        QMetaObject::invokeMethod(m_mainWindow, [this]() {
+            if (m_mainWindow->isMinimized()) {
+                m_mainWindow->showNormal();
+            }
+            m_mainWindow->show();
+            m_mainWindow->raise();
+            m_mainWindow->activateWindow();
+            m_mainWindow->onGameSessionEnded();
+        }, Qt::QueuedConnection);
+    }
 
     // quit when there are no more windows.
     if (shouldExitNow()) {
@@ -2072,3 +2085,4 @@ bool Application::checkQSavePath(QString path)
     }
     return false;
 }
+

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2025 Octol1ttle <l1ttleofficial@outlook.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -84,3 +84,4 @@ void NetworkJobFailedDialog::copyUrl() const
     auto* clipboard = QGuiApplication::clipboard();
     clipboard->setText(urls);
 }
+

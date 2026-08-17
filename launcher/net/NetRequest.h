@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (c) 2022 flowln <flowlnlnln@gmail.com>
  *  Copyright (C) 2022 Sefa Eyeoglu <contact@scrumplex.net>
  *  Copyright (C) 2023 Rachel Powers <508861+Ryex@users.noreply.github.com>
@@ -149,3 +149,4 @@ class NetRequest : public Task {
 }  // namespace Net
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(Net::NetRequest::Options)
+

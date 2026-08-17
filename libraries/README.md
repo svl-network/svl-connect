@@ -35,7 +35,7 @@ mainClass net.minecraft.launchwrapper.Launch
 param --username
 param CENSORED
 param --version
-param Prism Launcher
+param Sunveil Connect
 param --gameDir
 param /home/peterix/minecraft/FTB/17ForgeTest/minecraft
 param --assetsDir
@@ -52,7 +52,7 @@ param --userType
 param mojang
 param --tweakClass
 param cpw.mods.fml.common.launcher.FMLTweaker
-windowTitle Prism Launcher: 172ForgeTest
+windowTitle Sunveil Connect: 172ForgeTest
 windowParams 854x480
 userName CENSORED
 sessionId token:CENSORED:CENSORED
@@ -104,3 +104,4 @@ A quick and dirty css parser, used by NilLoader to store mod metadata.
 Translated (and heavily trimmed down) from [the original Java code](https://github.com/unascribed/NilLoader/blob/trunk/src/main/java/nilloader/api/lib/qdcss/QDCSS.java) from NilLoader
 
 Licensed under LGPL version 3.
+

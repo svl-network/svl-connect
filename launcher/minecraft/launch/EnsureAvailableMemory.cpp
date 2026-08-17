@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2026 Octol1ttle <l1ttleofficial@outlook.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -80,34 +80,13 @@ void EnsureAvailableMemory::executeTask()
     const uint64_t max = std::max(settingMin, settingMax);
 
     if (static_cast<double>(max) * 0.9 > static_cast<double>(available)) {
-        bool shouldAbort = false;
-
-        if (m_instance->settings()->get("LowMemWarning").toBool()) {
-            auto* dialog = CustomMessageBox::selectable(
-                nullptr, tr("Low free memory"),
-                tr("There might not be enough free RAM to launch this instance with the current memory settings.\n\n"
-                   "Maximum allocated: %1 MiB\nFree: %2 MiB (out of %3 MiB total)\n\n"
-                   "Launch anyway? This may cause slowdowns in the game and your system.")
-                    .arg(max)
-                    .arg(available)
-                    .arg(HardwareInfo::totalRamMiB()),
-                QMessageBox::Icon::Warning, QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No,
-                QMessageBox::StandardButton::No);
-
-            shouldAbort = dialog->exec() == QMessageBox::No;
-            dialog->deleteLater();
-        }
-
-        const auto message = tr("Not enough RAM available to launch this instance");
-        if (shouldAbort) {
-            emit logLine(message, MessageLevel::Fatal);
-            emitFailed(message);
-            return;
-        }
-
-        emit logLine(message, MessageLevel::Warning);
+        emit logLine(tr("Available host RAM (%1 MiB) is lower than requested allocation (%2 MiB). Dynamic allocation grace fallback will be applied.")
+                         .arg(available)
+                         .arg(max),
+                     MessageLevel::Warning);
     }
 
     emitSucceeded();
 #endif
 }
+

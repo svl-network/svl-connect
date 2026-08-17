@@ -1,7 +1,7 @@
-## Prism Launcher
+## Sunveil Connect
 
-     Prism Launcher - Minecraft Launcher
-     Copyright (C) 2022-2026 Prism Launcher Contributors
+     Sunveil Connect - Minecraft Launcher
+     Copyright (C) 2022-2026 Sunveil Connect Contributors
 
      This program is free software: you can redistribute it and/or modify
      it under the terms of the GNU General Public License as published by
@@ -420,3 +420,4 @@
     HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
     CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (c) 2023 Trial97 <alexandru.tripon97@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -339,3 +339,4 @@ bool GetModDependenciesTask::maybeInstalled(std::shared_ptr<PackDependency> pDep
                return !i.isEmpty() && laxCompare(i, pDep->version.fileName, true);
            }) != m_mods_file_names.end();  // check the existing mods
 }
+

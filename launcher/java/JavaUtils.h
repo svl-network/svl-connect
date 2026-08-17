@@ -26,7 +26,7 @@
 QString stripVariableEntries(QString name, QString target, QString remove);
 QProcessEnvironment CleanEnviroment();
 QStringList getMinecraftJavaBundle();
-QStringList getPrismJavaBundle();
+QStringList getSunveilJavaBundle();
 
 class JavaUtils : public QObject {
     Q_OBJECT
@@ -44,3 +44,4 @@ class JavaUtils : public QObject {
     static QString getJavaCheckPath();
     static const QString javaExecutable;
 };
+

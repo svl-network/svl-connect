@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2022 Sefa Eyeoglu <contact@scrumplex.net>
  *  Copyright (C) 2023 TheKodeToad <TheKodeToad@proton.me>
  *  Copyright (C) 2025 Yihe Li <winmikedows@hotmail.com>
@@ -246,3 +246,4 @@ bool createInstanceShortcutInOther(const Shortcut& shortcut)
 }
 
 }  // namespace ShortcutUtils
+

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2022 Lenny McLennington <lenny@sneed.church>
  *  Copyright (C) 2022 Swirl <swurl@swurl.xyz>
  *  Copyright (C) 2022 Sefa Eyeoglu <contact@scrumplex.net>
@@ -216,3 +216,4 @@ PasteUpload::PasteUpload(const QString& log, QString url, PasteType pasteType) :
 
     m_sink.reset(new Sink(this));
 }
+

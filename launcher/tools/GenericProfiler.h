@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (c) 2023 Trial97 <alexandru.tripon97@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -27,3 +27,4 @@ class GenericProfilerFactory : public BaseProfilerFactory {
     bool check([[maybe_unused]] QString* error) override { return true; };
     bool check([[maybe_unused]] const QString& path, [[maybe_unused]] QString* error) override { return true; };
 };
+

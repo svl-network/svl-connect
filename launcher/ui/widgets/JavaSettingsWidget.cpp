@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (c) 2022 Jamie Mansfield <jmansfield@cadixdev.org>
  *  Copyright (C) 2022 Sefa Eyeoglu <contact@scrumplex.net>
  *  Copyright (C) 2024 TheKodeToad <TheKodeToad@proton.me>
@@ -308,3 +308,4 @@ void JavaSettingsWidget::updateThresholds()
         m_ui->labelMaxMemNotice->hide();
     }
 }
+

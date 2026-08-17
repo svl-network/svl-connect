@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2022 Lenny McLennington <lenny@sneed.church>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -95,3 +95,4 @@ class PasteUpload : public Net::NetRequest {
     QString m_baseUrl;
     const PasteType m_paste_type;
 };
+

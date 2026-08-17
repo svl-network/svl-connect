@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2024 TheKodeToad <TheKodeToad@proton.me>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -44,3 +44,4 @@ int HintOverrideProxyStyle::styleHint(QStyle::StyleHint hint,
 
     return QProxyStyle::styleHint(hint, option, widget, returnData);
 }
+

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (c) 2024 Leia uwu <leia@tutamail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -35,3 +35,4 @@ class PrintServers : public LaunchStep {
     QMap<QString, QString> m_server_to_address;
     QStringList m_servers;
 };
+

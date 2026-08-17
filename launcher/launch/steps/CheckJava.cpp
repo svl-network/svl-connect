@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2022 Sefa Eyeoglu <contact@scrumplex.net>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -149,3 +149,4 @@ void CheckJava::printJavaInfo(const QString& version, const QString& architectur
         QString("Java is version %1, using %2 (%3) architecture, from %4").arg(version, architecture, realArchitecture, vendor),
         MessageLevel::Launcher);
 }
+

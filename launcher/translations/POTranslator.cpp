@@ -307,10 +307,10 @@ QString POTranslator::translate(const char* context, const char* sourceText, con
         }
     }
     if (!result.isEmpty()) {
-        result.replace("Prism Launcher", BuildConfig.LAUNCHER_DISPLAYNAME);
-        result.replace("Prism-Launcher", BuildConfig.LAUNCHER_DISPLAYNAME);
-        result.replace("PrismLauncher", BuildConfig.LAUNCHER_NAME);
-        result.replace("prismlauncher", BuildConfig.LAUNCHER_APP_BINARY_NAME);
+        result.replace("Sunveil Connect", BuildConfig.LAUNCHER_DISPLAYNAME);
+        result.replace("Sunveil-Launcher", BuildConfig.LAUNCHER_DISPLAYNAME);
+        result.replace("SunveilConnect", BuildConfig.LAUNCHER_NAME);
+        result.replace("SunveilConnect", BuildConfig.LAUNCHER_APP_BINARY_NAME);
         return result;
     }
     return QString();
@@ -320,3 +320,4 @@ bool POTranslator::isEmpty() const
 {
     return !d->loaded;
 }
+

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
- *  Prism Launcher - Minecraft Launcher
+ *  Sunveil Connect - Minecraft Launcher
  *  Copyright (C) 2024 Tayou <git@tayou.org>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -57,3 +57,4 @@ class SystemTheme : public ITheme {
     QString m_widgetTheme;
     QString m_themeName;
 };
+
