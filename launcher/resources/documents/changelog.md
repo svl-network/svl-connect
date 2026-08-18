@@ -2,6 +2,10 @@
 
 ### Live Commit History (main branch)
 
+* **feat: implement server mod synchronization, update management, and SVL connection UI page** `(08c8cfc3d)` - *HeyTaxx*, 2026-08-18
+* **chore: remove unused configuration file** `(861d375f8)` - *HeyTaxx*, 2026-08-18
+* **chore: remove deprecated legacy utility module** `(5d362e3f2)` - *HeyTaxx*, 2026-08-18
+* **feat: implement update management system and add infrastructure for custom launcher branding and localization** `(f71692534)` - *HeyTaxx*, 2026-08-18
 * **feat: introduce SVLConnectPage and SVLLoadingOverlay for integrated server management and connection tasks** `(1d9150d36)` - *HeyTaxx*, 2026-08-17
 * **feat: initialize codebase by importing Prism Launcher core modules and UI framework** `(257832846)` - *HeyTaxx*, 2026-08-17
 * **feat: initialize SVL Connect launcher application infrastructure and project structure** `(13d4aa715)` - *HeyTaxx*, 2026-08-17
@@ -28,10 +32,6 @@
 * **Set ModrinthInstanceCreationTask abortable to fix bug where you cant abort it** `(b81d2d064)` - *Reuben Sonnenschein*, 2026-08-11
 * **fix: regenerate instance UUID on import** `(a95d467fd)` - *Vishrut Sachan*, 2026-08-11
 * **Avoid passing const reference into reference arg in FlameInstanceCreationTask** `(5b42b9cd9)` - *TheKodeToad*, 2026-08-11
-* **Implement perfect forwarding for makeShared** `(e04ac1732)` - *TheKodeToad*, 2026-07-27
-* **refactor(net): fold Download/Upload into NetRequest (#5900)** `(480223973)` - *Alexandru Ionut Tripon*, 2026-08-11
-* **chore(nix): update lockfile (#5918)** `(d7870ff65)` - *Alexandru Ionut Tripon*, 2026-08-09
-* **Fix manual refresh being skipped on active account** `(7704b1e6e)` - *cat*, 2026-08-09
 
 ---
 *Compiled directly from repository source tree.*

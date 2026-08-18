@@ -239,9 +239,23 @@ bool SVLModSyncTask::prepareInstance(const QString& mcVersion, const QString& lo
                                       "name=%1\n"
                                       "iconKey=default\n"
                                       "ManagedName=%2\n"
-                                      "OverrideCommands=false\n")
+                                      "OverrideCommands=false\n"
+                                      "OverrideJava=true\n"
+                                      "IgnoreJavaCompatibility=true\n")
                                   .arg(m_serverName, m_serverKey);
             cfgFile.write(content.toUtf8());
+            cfgFile.close();
+        }
+    } else {
+        QFile cfgFile(cfgPath);
+        if (cfgFile.open(QIODevice::ReadWrite | QIODevice::Text)) {
+            QString content = QString::fromUtf8(cfgFile.readAll());
+            if (!content.contains("IgnoreJavaCompatibility=true")) {
+                if (!content.endsWith("\n")) content += "\n";
+                content += "OverrideJava=true\nIgnoreJavaCompatibility=true\n";
+                cfgFile.resize(0);
+                cfgFile.write(content.toUtf8());
+            }
             cfgFile.close();
         }
     }
@@ -327,6 +341,11 @@ bool SVLModSyncTask::prepareInstance(const QString& mcVersion, const QString& lo
 
     if (!m_instance) {
         return false;
+    }
+
+    if (m_instance->settings()) {
+        m_instance->settings()->set("OverrideJava", true);
+        m_instance->settings()->set("IgnoreJavaCompatibility", true);
     }
 
     // Determine correct mods folder path

@@ -320,7 +320,7 @@ void SVLConnectPage::onServersReceived()
                     } else {
                         model.modCount = obj.value("modCount").toInt(13);
                     }
-                    model.isOnline = statObj.value("online").toBool(true);
+                    model.isOnline = obj.contains("online") ? obj.value("online").toBool(true) : (statObj.contains("online") ? statObj.value("online").toBool(true) : true);
 
                     model.boosts = obj.value("boosts").toInt(0);
                     model.sponsored = obj.value("sponsored").toBool(false);
