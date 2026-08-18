@@ -3,6 +3,7 @@
     <qresource prefix="/documents">
         <file>../../../COPYING.md</file>
     <file>credits.html</file>
+    <file>changelog.md</file>
     </qresource>
 </RCC>
 

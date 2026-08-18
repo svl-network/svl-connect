@@ -107,7 +107,11 @@
 #include "ui/dialogs/ImportResourceDialog.h"
 #include "ui/dialogs/NewInstanceDialog.h"
 #include "ui/dialogs/NewsDialog.h"
+#include "ui/dialogs/SVLNewsPage.h"
 #include "ui/dialogs/ProgressDialog.h"
+#include "ui/pages/svl/SVLModrinthBrowser.h"
+#include "tasks/SVLUpdateManager.h"
+#include "ui/dialogs/SVLUpdateOverlay.h"
 #include "ui/dialogs/skins/SkinManageDialog.h"
 #include "ui/instanceview/InstanceDelegate.h"
 #include "ui/instanceview/InstanceProxyModel.h"
@@ -128,8 +132,6 @@
 #include "modplatform/ModIndex.h"
 #include "modplatform/flame/FlameAPI.h"
 #include "modplatform/flame/FlameModIndex.h"
-
-#include "KonamiCode.h"
 
 #include "InstanceCopyTask.h"
 #include "InstanceDirUpdate.h"
@@ -222,7 +224,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
         menuBar()->setVisible(false);
         menuBar()->hide();
 
-        ui->actionSettings->setText(tr("⚙ Settings"));
+        ui->actionSettings->setText(tr("Settings"));
         ui->actionSettings->setIcon(QIcon::fromTheme("settings"));
 
         ui->actionReportBug->setVisible(!BuildConfig.BUG_TRACKER_URL.isEmpty());
@@ -235,7 +237,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
         // Hide obsolete/legacy toolbar actions to keep navigation focused
         ui->actionFoldersButton->setVisible(false);
         ui->actionHelpButton->setVisible(false);
-        ui->actionCAT->setVisible(false);
         ui->actionAddInstance->setVisible(false);
 
 #ifndef Q_OS_MAC
@@ -285,15 +286,20 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
         connect(q, &QShortcut::activated, APPLICATION, &Application::quit);
     }
 
-    // Konami Code
-    {
-        secretEventFilter = new KonamiCode(this);
-        connect(secretEventFilter, &KonamiCode::triggered, this, &MainWindow::konamiTriggered);
-    }
-
-    // Disable upstream news ticker
-    ui->newsToolBar->setVisible(false);
-    ui->newsToolBar->setEnabled(false);
+    // Configure More News footer toolbar
+    ui->newsToolBar->setMovable(false);
+    ui->newsToolBar->setFloatable(false);
+    ui->newsToolBar->setEnabled(true);
+    ui->newsToolBar->setVisible(true);
+    ui->actionMoreNews->setEnabled(true);
+    ui->actionMoreNews->setText(tr("More News..."));
+    ui->newsToolBar->setStyleSheet(
+        "QToolBar { border: none; background: transparent; spacing: 0px; margin: 0px; padding: 2px 8px; } "
+        "QToolBar::handle { width: 0px; height: 0px; border: none; background: transparent; margin: 0px; padding: 0px; } "
+        "QToolButton { color: #A1A1AA; background: transparent; border: none; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px; } "
+        "QToolButton:hover { color: #00E599; background-color: #1C1C1E; } "
+        "QToolButton:pressed { color: #00B377; background-color: #242426; }"
+    );
 
     // Create the instance list widget
     {
@@ -354,11 +360,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
 
         ui->horizontalLayout->addWidget(m_centralStack);
 
-        actionShowServers = new QAction(QIcon::fromTheme("news"), tr("⚡ Realms"), this);
+        actionShowServers = new QAction(QIcon::fromTheme("server", QIcon(":/icons/pe_dark/scalable/server.svg")), tr("Realms"), this);
         actionShowServers->setCheckable(true);
         actionShowServers->setChecked(true);
 
-        actionShowInstances = new QAction(QIcon::fromTheme("instance"), tr("📦 Instances"), this);
+        actionShowInstances = new QAction(QIcon::fromTheme("instances", QIcon(":/icons/pe_dark/scalable/instances.svg")), tr("Instances"), this);
         actionShowInstances->setCheckable(true);
 
         auto* navGroup = new QActionGroup(this);
@@ -368,17 +374,14 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
         connect(actionShowServers, &QAction::triggered, this, &MainWindow::showServersView);
         connect(actionShowInstances, &QAction::triggered, this, &MainWindow::showInstancesView);
 
+        ui->mainToolBar->setMovable(false);
+        ui->mainToolBar->setFloatable(false);
+        ui->mainToolBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        ui->mainToolBar->setIconSize(QSize(18, 18));
+
         ui->mainToolBar->insertAction(ui->actionAddInstance, actionShowServers);
         ui->mainToolBar->insertAction(ui->actionAddInstance, actionShowInstances);
-        ui->mainToolBar->insertSeparator(ui->actionAddInstance);
-    }
-    // The cat background
-    {
-        // set the cat action priority here so you can still see the action in qt designer
-        ui->actionCAT->setPriority(QAction::LowPriority);
-        updateCatState();
-        connect(ui->actionCAT, &QAction::toggled, this, &MainWindow::onCatToggled);
-        connect(APPLICATION, &Application::currentCatChanged, this, &MainWindow::onCatChanged);
+        ui->mainToolBar->removeAction(ui->actionAddInstance);
     }
 
     // Togglable status bar
@@ -415,14 +418,49 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(APPLICATION, &Application::globalSettingsApplied, this, &MainWindow::globalSettingsClosed);
 
     m_statusLeft = new QLabel(QString("%1 Release %2").arg(BuildConfig.LAUNCHER_DISPLAYNAME, BuildConfig.printableVersionString()), this);
+    m_statusLeft->setStyleSheet("color: #A1A1AA; font-size: 11px; padding-left: 6px;");
     m_statusCenter = new QLabel(tr("Total playtime: 0s"), this);
+    m_statusCenter->setStyleSheet("color: #A1A1AA; font-size: 11px; padding-right: 6px;");
     statusBar()->addPermanentWidget(m_statusLeft, 1);
     statusBar()->addPermanentWidget(m_statusCenter, 0);
+    statusBar()->setSizeGripEnabled(false);
+    statusBar()->setStyleSheet("QStatusBar { background-color: #111111; border-top: 1px solid #2C2C2E; color: #A1A1AA; font-size: 11px; min-height: 28px; } QLabel { color: #A1A1AA; font-size: 11px; }");
 
     // Add "manage accounts" button, right align
     QWidget* spacer = new QWidget();
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     ui->mainToolBar->insertWidget(ui->actionAccountsButton, spacer);
+
+    m_updateAlertBtn = new QPushButton(tr("⚠️ NEW UPDATE AVAILABLE"), this);
+    m_updateAlertBtn->setObjectName("btnUpdateAlert");
+    m_updateAlertBtn->setCursor(Qt::PointingHandCursor);
+    m_updateAlertBtn->setVisible(false);
+    m_updateAlertBtn->setStyleSheet(
+        "QPushButton#btnUpdateAlert { "
+        "background-color: #FFB800; color: #05080A; font-weight: 800; font-size: 11px; letter-spacing: 0.3px; "
+        "border: none; border-radius: 6px; padding: 6px 14px; margin-right: 6px; } "
+        "QPushButton#btnUpdateAlert:hover { background-color: #FFC72C; } "
+        "QPushButton#btnUpdateAlert:pressed { background-color: #E0A300; }"
+    );
+    ui->mainToolBar->insertWidget(ui->actionAccountsButton, m_updateAlertBtn);
+
+    connect(SVLUpdateManager::instance(), &SVLUpdateManager::updateAvailable, this, &MainWindow::onUpdateAvailable);
+    SVLUpdateManager::instance()->checkForUpdates(3000);
+
+    ui->mainToolBar->setStyleSheet(
+        "QToolBar { background-color: #111111; border-bottom: 1px solid #2C2C2E; padding: 6px 16px; spacing: 8px; } "
+        "QToolBar::handle { width: 0px; height: 0px; margin: 0px; padding: 0px; border: none; background: transparent; } "
+        "QToolBar::separator { background-color: #2C2C2E; width: 1px; margin: 6px 4px; } "
+        "QToolButton { background-color: transparent; color: #A1A1AA; border: 1px solid transparent; border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 600; margin: 0 2px; } "
+        "QToolButton:hover { background-color: #2C2C2E; color: #FFFFFF; } "
+        "QToolButton:checked { background-color: rgba(0, 229, 153, 0.12); color: #00E599; border: 1px solid rgba(0, 229, 153, 0.35); font-weight: 700; }"
+    );
+
+    auto* accBtn = qobject_cast<QToolButton*>(ui->mainToolBar->widgetForAction(ui->actionAccountsButton));
+    if (accBtn) {
+        accBtn->setObjectName("accountsButton");
+        accBtn->setStyleSheet("QToolButton { background-color: #1C1C1E; color: #FFFFFF; border: 1px solid #2C2C2E; border-radius: 8px; padding: 6px 14px; font-weight: 600; font-size: 12px; } QToolButton:hover { background-color: #2C2C2E; border-color: #3F3F46; }");
+    }
 
     // Use undocumented property... https://stackoverflow.com/questions/7121718/create-a-scrollbar-in-a-submenu-qt
     ui->accountsMenu->setStyleSheet("QMenu { menu-scrollable: 1; }");
@@ -525,33 +563,12 @@ void MainWindow::setStatusBarVisibility(bool state)
 }
 void MainWindow::lockToolbars(bool state)
 {
-    ui->mainToolBar->setMovable(!state);
+    ui->mainToolBar->setMovable(false);
+    ui->mainToolBar->setFloatable(false);
     ui->instanceToolBar->setMovable(!state);
-    ui->newsToolBar->setMovable(!state);
+    ui->newsToolBar->setMovable(false);
+    ui->newsToolBar->setFloatable(false);
     APPLICATION->settings()->set("ToolbarsLocked", state);
-}
-
-void MainWindow::konamiTriggered()
-{
-    QString gradient =
-        " stop:0 rgba(125, 0, 0, 255), stop:0.166 rgba(125, 125, 0, 255), stop:0.333 rgba(0, 125, 0, 255), stop:0.5 rgba(0, 125, 125, "
-        "255), stop:0.666 rgba(0, 0, 125, 255), stop:0.833 rgba(125, 0, 125, 255), stop:1 rgba(125, 0, 0, 255));";
-    QString stylesheet = "background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0," + gradient;
-    if (ui->mainToolBar->styleSheet() == stylesheet) {
-        ui->mainToolBar->setStyleSheet("");
-        ui->instanceToolBar->setStyleSheet("");
-        ui->centralWidget->setStyleSheet("");
-        ui->newsToolBar->setStyleSheet("");
-        ui->statusBar->setStyleSheet("");
-        qDebug() << "Super Secret Mode DEACTIVATED!";
-    } else {
-        ui->mainToolBar->setStyleSheet(stylesheet);
-        ui->instanceToolBar->setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1," + gradient);
-        ui->centralWidget->setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1," + gradient);
-        ui->newsToolBar->setStyleSheet(stylesheet);
-        ui->statusBar->setStyleSheet(stylesheet);
-        qDebug() << "Super Secret Mode ACTIVATED!";
-    }
 }
 
 void MainWindow::showInstanceContextMenu(const QPoint& pos)
@@ -573,6 +590,21 @@ void MainWindow::showInstanceContextMenu(const QPoint& pos)
 
         actions.prepend(ui->actionChangeInstIcon);
         actions.prepend(ui->actionRenameInstance);
+
+        auto* actionModrinth = new QAction(QIcon::fromTheme("modrinth"), tr("Discover Mods on Modrinth..."), this);
+        connect(actionModrinth, &QAction::triggered, this, [this]() {
+            if (m_selectedInstance) {
+                QString modsPath = FS::PathCombine(m_selectedInstance->instanceRoot(), ".minecraft", "mods");
+                if (!QDir(modsPath).exists()) {
+                    modsPath = FS::PathCombine(m_selectedInstance->instanceRoot(), "minecraft", "mods");
+                }
+                SVLModrinthBrowser::showBrowser(modsPath, this);
+            } else {
+                SVLModrinthBrowser::showBrowser(QString(), this);
+            }
+        });
+        actions.append(actionSep);
+        actions.append(actionModrinth);
 
         // add header
         actions.prepend(actionSep);
@@ -805,15 +837,8 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* ev)
 {
     if (obj == view) {
         if (ev->type() == QEvent::KeyPress) {
-            secretEventFilter->input(ev);
             QKeyEvent* keyEvent = static_cast<QKeyEvent*>(ev);
             switch (keyEvent->key()) {
-                    /*
-                case Qt::Key_Enter:
-                case Qt::Key_Return:
-                    activateInstance(m_selectedInstance);
-                    return true;
-                    */
                 case Qt::Key_Delete:
                     on_actionDeleteInstance_triggered();
                     return true;
@@ -851,33 +876,6 @@ QString intListToString(const QList<int>& list)
         slist.append(QString::number(list.at(i)));
     }
     return slist.join(',');
-}
-
-void MainWindow::onCatToggled(bool state)
-{
-    setCatBackground(state);
-    APPLICATION->settings()->set("TheCat", state);
-}
-
-void MainWindow::setCatBackground(bool enabled)
-{
-    view->setPaintCat(enabled);
-    view->viewport()->repaint();
-}
-
-void MainWindow::updateCatState()
-{
-    SettingsObject* settings = APPLICATION->settings();
-    const bool catEnabled = settings->get("EnableCat").toBool();
-    bool catVisible = settings->get("TheCat").toBool();
-    if (!catEnabled && catVisible) {
-        settings->set("TheCat", false);
-        catVisible = false;
-    }
-
-    ui->actionCAT->setVisible(catEnabled);
-    ui->actionCAT->setChecked(catVisible);
-    setCatBackground(catVisible);
 }
 
 void MainWindow::runModalTask(Task* task)
@@ -1396,7 +1394,6 @@ void MainWindow::globalSettingsClosed()
     updateLaunchButton();
     updateThemeMenu();
     updateStatusCenter();
-    updateCatState();
     // This needs to be done to prevent UI elements disappearing in the event the config is changed
     // but Sunveil Connect exits abnormally, causing the window state to never be saved:
     APPLICATION->settings()->set("MainWindowState", QString::fromUtf8(saveState().toBase64()));
@@ -1482,22 +1479,12 @@ void MainWindow::on_actionOpenWiki_triggered()
 
 void MainWindow::on_actionMoreNews_triggered()
 {
-    auto entries = m_newsChecker->getNewsEntries();
-    NewsDialog news_dialog(entries, this);
-    news_dialog.exec();
+    SVLNewsPage::showNews(this);
 }
 
 void MainWindow::newsButtonClicked()
 {
-    auto entries = m_newsChecker->getNewsEntries();
-    NewsDialog news_dialog(entries, this);
-    news_dialog.toggleArticleList();
-    news_dialog.exec();
-}
-
-void MainWindow::onCatChanged(int)
-{
-    setCatBackground(APPLICATION->settings()->get("TheCat").toBool());
+    SVLNewsPage::showNews(this);
 }
 
 void MainWindow::on_actionAbout_triggered()
@@ -1866,6 +1853,19 @@ void MainWindow::onGameSessionEnded()
     showServersView();
     if (m_svlConnectPage) {
         m_svlConnectPage->refreshServers();
+    }
+}
+
+void MainWindow::onUpdateAvailable(const QString& newVersion, bool isMandatory, const QString& downloadUrl, const QString& changelog)
+{
+    if (m_updateAlertBtn) {
+        m_updateAlertBtn->setText(isMandatory ? tr("⚠️ UPDATE REQUIRED") : tr("⚠️ NEW UPDATE AVAILABLE"));
+        m_updateAlertBtn->setVisible(true);
+
+        disconnect(m_updateAlertBtn, &QPushButton::clicked, nullptr, nullptr);
+        connect(m_updateAlertBtn, &QPushButton::clicked, this, [this, newVersion, isMandatory, downloadUrl, changelog]() {
+            SVLUpdateOverlay::showUpdate(newVersion, isMandatory, downloadUrl, changelog, this);
+        });
     }
 }
 

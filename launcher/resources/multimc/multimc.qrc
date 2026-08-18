@@ -8,6 +8,8 @@
 
         <!-- launcher settings page -->
         <file>scalable/launcher.svg</file>
+        <file>scalable/instances.svg</file>
+        <file>scalable/instance.svg</file>
 
         <!-- technic logo icon -->
         <file>scalable/technic.svg</file>

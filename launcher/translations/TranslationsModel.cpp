@@ -207,10 +207,11 @@ TranslationsModel::TranslationsModel(const QString& path, QObject* parent) : QAb
     d = std::make_unique<Private>();
     d->m_dir.setPath(path);
     d->m_selectedLanguage = APPLICATION->settings()->get("Language").toString();
-    if (d->m_selectedLanguage.isEmpty()) {
+    if (d->m_selectedLanguage.isEmpty() || d->m_selectedLanguage == "de" || d->m_selectedLanguage == "de_DE") {
         d->m_selectedLanguage = g_defaultLangCode;
     }
     APPLICATION->settings()->set("Language", d->m_selectedLanguage);
+    APPLICATION->settings()->set("UseSystemLocale", false);
     FS::ensureFolderPathExists(path);
     reloadLocalFiles();
 

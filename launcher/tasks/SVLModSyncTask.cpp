@@ -12,6 +12,7 @@
 #include <QCryptographicHash>
 
 #include "Application.h"
+#include "SVLSecurity.h"
 #include "FileSystem.h"
 #include "InstanceList.h"
 #include "minecraft/MinecraftInstance.h"
@@ -78,6 +79,7 @@ void SVLModSyncTask::executeTask()
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     request.setHeader(QNetworkRequest::UserAgentHeader, "SunveilConnect/1.0.0");
     request.setTransferTimeout(10000);
+    SVLSecurity::injectAuthHeaders(request);
 
     m_manifestReply = APPLICATION->network()->get(request);
     connect(m_manifestReply, &QNetworkReply::finished, this, &SVLModSyncTask::onManifestReceived);
@@ -350,12 +352,10 @@ void SVLModSyncTask::performCleanSyncAndDownload()
     QStringList localFiles = modsDir.entryList(QStringList() << "*.jar", QDir::Files);
 
     QMap<QString, SVLModEntry> manifestBySha;
-    QMap<QString, SVLModEntry> manifestByName;
     for (const auto& mod : m_manifestMods) {
         if (!mod.sha256.isEmpty()) {
             manifestBySha.insert(mod.sha256, mod);
         }
-        manifestByName.insert(mod.fileName.toLower(), mod);
     }
 
     QSet<QString> localHashes;

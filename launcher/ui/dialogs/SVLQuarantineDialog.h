@@ -13,10 +13,6 @@ struct SVLModEntry {
     QString tier; // "official" or "community"
 };
 
-namespace Ui {
-class SVLQuarantineDialog;
-}
-
 class SVLQuarantineDialog : public QDialog {
     Q_OBJECT
 

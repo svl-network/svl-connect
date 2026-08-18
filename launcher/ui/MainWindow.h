@@ -58,9 +58,7 @@ class MinecraftInstance;
 class MinecraftLauncher;
 class BaseProfilerFactory;
 class InstanceView;
-class KonamiCode;
 class InstanceTask;
-class LabeledToolButton;
 class Setting;
 class SVLConnectPage;
 class SVLRealmDetailPage;
@@ -92,6 +90,7 @@ class MainWindow : public QMainWindow {
     void showInstancesView();
     void launchSVLServer(MinecraftInstance* instance, const QString& ip, quint16 port);
     void onGameSessionEnded();
+    void onUpdateAvailable(const QString& newVersion, bool isMandatory, const QString& downloadUrl, const QString& changelog);
    signals:
     void isClosing();
 
@@ -99,10 +98,6 @@ class MainWindow : public QMainWindow {
     QMenu* createPopupMenu() override;
 
    private slots:
-    void onCatToggled(bool);
-
-    void onCatChanged(int);
-
     void on_actionAbout_triggered();
 
     void on_actionAddInstance_triggered();
@@ -215,8 +210,6 @@ class MainWindow : public QMainWindow {
 
     void updateNewsLabel();
 
-    void konamiTriggered();
-
     void globalSettingsClosed();
 
     void setStatusBarVisibility(bool);
@@ -233,8 +226,6 @@ class MainWindow : public QMainWindow {
     void retranslateUi();
 
     void addInstance(const QString& url = QString(), const QMap<QString, QString>& extra_info = {});
-    void setCatBackground(bool enabled);
-    void updateCatState();
     void updateInstanceToolIcon(QString new_icon);
     void setSelectedInstanceById(const QString& id);
     void updateStatusCenter();
@@ -260,7 +251,7 @@ class MainWindow : public QMainWindow {
     LabeledToolButton* changeIconButton = nullptr;
     LabeledToolButton* renameButton = nullptr;
     QToolButton* helpMenuButton = nullptr;
-    KonamiCode* secretEventFilter = nullptr;
+    QPushButton* m_updateAlertBtn = nullptr;
 
     std::shared_ptr<Setting> instanceToolbarSetting = nullptr;
 

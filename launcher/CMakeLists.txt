@@ -402,6 +402,8 @@ set(TASKS_SOURCES
     tasks/MultipleOptionsTask.cpp
     tasks/SVLModSyncTask.h
     tasks/SVLModSyncTask.cpp
+    tasks/SVLUpdateManager.h
+    tasks/SVLUpdateManager.cpp
 )
 
 set(SETTINGS_SOURCES
@@ -807,10 +809,6 @@ SET(LAUNCHER_SOURCES
     Markdown.h
     Markdown.cpp
 
-    # Super secret!
-    KonamiCode.h
-    KonamiCode.cpp
-
     # Icons
     icons/MMCIcon.h
     icons/MMCIcon.cpp
@@ -1039,14 +1037,25 @@ SET(LAUNCHER_SOURCES
     ui/pages/modplatform/modrinth/ModrinthResourcePages.h
 
     # GUI - Sunveil Connect pages
+    SVLSecurity.h
     ui/pages/svl/SVLConnectPage.cpp
     ui/pages/svl/SVLConnectPage.h
     ui/pages/svl/SVLRealmDetailPage.cpp
     ui/pages/svl/SVLRealmDetailPage.h
+    ui/pages/svl/SVLModrinthBrowser.cpp
+    ui/pages/svl/SVLModrinthBrowser.h
+    ui/pages/svl/SVLAccountManager.cpp
+    ui/pages/svl/SVLAccountManager.h
 
     # GUI - dialogs
+    ui/dialogs/SVLUpdateOverlay.cpp
+    ui/dialogs/SVLUpdateOverlay.h
     ui/dialogs/SVLLoadingOverlay.cpp
     ui/dialogs/SVLLoadingOverlay.h
+    ui/dialogs/SVLErrorOverlay.cpp
+    ui/dialogs/SVLErrorOverlay.h
+    ui/dialogs/SVLNewsPage.cpp
+    ui/dialogs/SVLNewsPage.h
     ui/dialogs/SVLQuarantineDialog.cpp
     ui/dialogs/SVLQuarantineDialog.h
     ui/dialogs/AboutDialog.cpp
@@ -1250,8 +1259,19 @@ endif()
 
 ####### Targets ########
 
+# Pre-build changelog generator from git log / GitHub REST API
+add_custom_target(generate_changelog
+    COMMAND ${CMAKE_COMMAND}
+        -DREPO_ROOT="${CMAKE_SOURCE_DIR}"
+        -DOUTPUT_FILE="${CMAKE_CURRENT_SOURCE_DIR}/resources/documents/changelog.md"
+        -P "${CMAKE_SOURCE_DIR}/cmake/GenerateChangelog.cmake"
+    BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/resources/documents/changelog.md"
+    COMMENT "Generating compile-time changelog from git log / GitHub API"
+)
+
 # Add executable
 add_library(Launcher_logic STATIC ${LOGIC_SOURCES} ${LAUNCHER_SOURCES} ${LAUNCHER_RESOURCES})
+add_dependencies(Launcher_logic generate_changelog)
 target_include_directories(Launcher_logic PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(Launcher_logic PUBLIC LAUNCHER_APPLICATION)
 
@@ -1486,11 +1506,14 @@ endif()
 # Set basic compiler warning/error flags for all targets
 get_property(Launcher_TARGETS DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY BUILDSYSTEM_TARGETS)
 foreach(target ${Launcher_TARGETS})
-    message(STATUS "Enabling all warnings as errors for target '${target}'")
-    if (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
-        target_compile_options(${target} PRIVATE /W4 /WX /permissive-)
-    else()
-        target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    get_target_property(target_type ${target} TYPE)
+    if (NOT target_type STREQUAL "UTILITY" AND NOT target_type STREQUAL "INTERFACE_LIBRARY")
+        message(STATUS "Enabling all warnings as errors for target '${target}'")
+        if (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+            target_compile_options(${target} PRIVATE /W4 /WX /permissive-)
+        else()
+            target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+        endif()
     endif()
 endforeach()
 

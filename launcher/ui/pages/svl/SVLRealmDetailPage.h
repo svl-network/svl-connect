@@ -1,14 +1,15 @@
 #pragma once
 
 #include <QWidget>
-#include <QLabel>
-#include <QPushButton>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QScrollArea>
-#include <QFrame>
-
 #include "SVLConnectPage.h"
+
+class QLabel;
+class QPushButton;
+class QVBoxLayout;
+class QHBoxLayout;
+class QScrollArea;
+class QFrame;
+class QTextBrowser;
 
 class SVLRealmDetailPage : public QWidget {
     Q_OBJECT
@@ -26,6 +27,8 @@ signals:
 private:
     void setupUI();
     void updateUI();
+    void loadBanner(const QString& bannerUrl);
+    void applyBannerPixmap(const QPixmap& originalPixmap);
 
 private:
     SVLServerModel m_server;
@@ -34,6 +37,11 @@ private:
     QPushButton* m_backBtn = nullptr;
     QLabel* m_headerTitle = nullptr;
 
+    // Banner
+    QFrame* m_bannerFrame = nullptr;
+    QLabel* m_bannerBgLabel = nullptr;
+    QLabel* m_bannerBadge = nullptr;
+
     // Left Column
     QLabel* m_iconLabel = nullptr;
     QLabel* m_serverNameLabel = nullptr;
@@ -41,16 +49,15 @@ private:
     QLabel* m_latencyBadge = nullptr;
     QLabel* m_regionBadge = nullptr;
     QPushButton* m_connectBtn = nullptr;
-    QPushButton* m_favBtn = nullptr;
-    QPushButton* m_copyIpBtn = nullptr;
-    QPushButton* m_discordBtn = nullptr;
+    QWidget* m_linksContainer = nullptr;
+    QVBoxLayout* m_linksLayout = nullptr;
 
     // Right Column
     QLabel* m_ipValLabel = nullptr;
     QLabel* m_versionValLabel = nullptr;
     QLabel* m_loaderValLabel = nullptr;
     QLabel* m_statusValLabel = nullptr;
-    QLabel* m_motdTextLabel = nullptr;
+    QTextBrowser* m_descBrowser = nullptr;
     QWidget* m_modsContainer = nullptr;
     QVBoxLayout* m_modsLayout = nullptr;
     QLabel* m_modsHeaderLabel = nullptr;
