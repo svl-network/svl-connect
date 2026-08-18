@@ -71,7 +71,7 @@ void SVLModSyncTask::executeTask()
     setProgress(0, 100);
 
     if (m_masterApiBaseUrl.isEmpty()) {
-        m_masterApiBaseUrl = "http://192.168.0.148:3001";
+        m_masterApiBaseUrl = "https://realms.sunveil.net";
     }
 
     QUrl manifestUrl(m_masterApiBaseUrl + "/api/v1/servers/" + m_serverKey + "/manifest");

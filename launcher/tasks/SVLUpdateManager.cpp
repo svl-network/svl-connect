@@ -40,7 +40,7 @@ void SVLUpdateManager::onCheckUpdatesTriggered()
         m_reply = nullptr;
     }
 
-    QString masterApiUrl = "http://192.168.0.148:3001";
+    QString masterApiUrl = "https://realms.sunveil.net";
     QUrl url(QString("%1/api/v1/updates/latest").arg(masterApiUrl));
     QNetworkRequest req(url);
     req.setHeader(QNetworkRequest::UserAgentHeader, "SunveilConnect/1.0.0");

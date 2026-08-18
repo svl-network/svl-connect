@@ -71,7 +71,7 @@ private:
     QWidget* createServerCard(const SVLServerModel& server);
     void bindServerIcon(const QString& iconData, QLabel* label, int size = 56);
 
-    QString m_masterApiBaseUrl = "http://192.168.0.148:3001";
+    QString m_masterApiBaseUrl = "https://realms.sunveil.net";
     QList<SVLServerModel> m_allServers;
     QList<SVLServerModel> m_filteredServers;
     QString m_currentQuery;
