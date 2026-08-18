@@ -346,6 +346,15 @@ bool SVLModSyncTask::prepareInstance(const QString& mcVersion, const QString& lo
     if (m_instance->settings()) {
         m_instance->settings()->set("OverrideJava", true);
         m_instance->settings()->set("IgnoreJavaCompatibility", true);
+
+        // For large modpacks (>40 mods), ensure at least 4096MB heap to avoid OutOfMemoryError
+        if (m_manifestMods.size() >= 40) {
+            int curMaxMem = m_instance->settings()->get("MaxMemAlloc").toInt();
+            if (curMaxMem < 4096) {
+                m_instance->settings()->set("OverrideMemory", true);
+                m_instance->settings()->set("MaxMemAlloc", 4096);
+            }
+        }
     }
 
     // Determine correct mods folder path
