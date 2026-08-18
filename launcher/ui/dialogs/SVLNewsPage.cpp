@@ -184,7 +184,7 @@ void SVLNewsPage::setupUI()
     m_githubBtn->setObjectName("btnGitHub");
     m_githubBtn->setCursor(Qt::PointingHandCursor);
     connect(m_githubBtn, &QPushButton::clicked, this, []() {
-        QDesktopServices::openUrl(QUrl("https://github.com/SunveilNetwork/SVL-Connect"));
+        QDesktopServices::openUrl(QUrl("https://github.com/svl-network/svl-connect"));
     });
     footerLayout->addWidget(m_githubBtn);
 

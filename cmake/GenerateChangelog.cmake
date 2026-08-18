@@ -37,7 +37,7 @@ endif()
 
 # 2. If git failed, try GitHub REST API
 if(NOT GENERATED_SUCCESS)
-    set(GITHUB_API_URL "https://api.github.com/repos/SunveilNetwork/SVL-Connect/commits?per_page=25")
+    set(GITHUB_API_URL "https://api.github.com/repos/svl-network/svl-connect/commits?per_page=25")
     set(TEMP_JSON "${CMAKE_CURRENT_BINARY_DIR}/github_commits.json")
     file(DOWNLOAD "${GITHUB_API_URL}" "${TEMP_JSON}"
         TIMEOUT 5

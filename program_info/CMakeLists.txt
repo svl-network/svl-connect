@@ -12,7 +12,7 @@ set(Launcher_CommonName "SVLConnect")
 set(Launcher_DisplayName "Sunveil Connect")
 set(Launcher_AppID "net.sunveil.connect")
 set(Launcher_Domain "sunveil.net")
-set(Launcher_Git "https://github.com/SunveilNetwork/SVL-Connect")
+set(Launcher_Git "https://github.com/svl-network/svl-connect")
 
 set(Launcher_Name "${Launcher_CommonName}" PARENT_SCOPE)
 set(Launcher_DisplayName "${Launcher_DisplayName}" PARENT_SCOPE)

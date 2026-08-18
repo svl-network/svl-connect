@@ -76,7 +76,7 @@ void SVLUpdateManager::onUpdateReplyFinished()
         QJsonObject clientObj = root.value("client").toObject();
         m_clientInfo.version = clientObj.value("version").toString();
         m_clientInfo.mandatory = clientObj.value("mandatory").toBool(false);
-        m_clientInfo.downloadUrl = clientObj.value("url").toString("https://github.com/SunveilNetwork/svl-connect/releases/latest");
+        m_clientInfo.downloadUrl = clientObj.value("url").toString("https://github.com/svl-network/svl-connect/releases/latest");
         m_clientInfo.changelog = clientObj.value("changelog").toString("New enhancements and performance optimizations.");
 
         QString localVersion = BuildConfig.printableVersionString();
