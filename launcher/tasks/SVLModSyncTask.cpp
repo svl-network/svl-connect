@@ -1,5 +1,7 @@
 #include "SVLModSyncTask.h"
 
+#include <QApplication>
+#include <QLabel>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -204,8 +206,24 @@ void SVLModSyncTask::processManifest(const QByteArray& data)
 
     // Security & Quarantine Check
     if (!m_verified && !communityMods.isEmpty()) {
-        SVLQuarantineDialog dialog(m_serverName, m_serverKey, communityMods, m_parentWidget);
-        if (dialog.exec() != QDialog::Accepted) {
+        QList<QWidget*> hiddenOverlays;
+        for (QWidget* topWidget : QApplication::topLevelWidgets()) {
+            if (topWidget && topWidget->inherits("QDialog") && topWidget->isVisible()) {
+                if (topWidget->findChild<QLabel*>("loadingPrimaryStatus") != nullptr || topWidget->inherits("SVLLoadingOverlay")) {
+                    topWidget->hide();
+                    hiddenOverlays.append(topWidget);
+                }
+            }
+        }
+
+        SVLQuarantineDialog dialog(m_serverName, m_serverKey, communityMods, m_parentWidget ? m_parentWidget->window() : nullptr);
+        int dialogResult = dialog.exec();
+
+        for (QWidget* w : hiddenOverlays) {
+            if (w) w->show();
+        }
+
+        if (dialogResult != QDialog::Accepted) {
             emitFailed(tr("Connection cancelled: Community mod quarantine was declined by the user."));
             return;
         }
@@ -326,10 +344,6 @@ bool SVLModSyncTask::prepareInstance(const QString& mcVersion, const QString& lo
         }
     }
 
-    // Ensure minecraft/mods directory exists
-    QString modsFolder = FS::PathCombine(instanceDir, ".minecraft", "mods");
-    FS::ensureFolderPathExists(modsFolder);
-
     if (needsReload || !m_instance) {
         APPLICATION->instances()->loadList();
         m_instance = APPLICATION->instances()->getInstanceById(m_serverKey);
@@ -357,18 +371,26 @@ bool SVLModSyncTask::prepareInstance(const QString& mcVersion, const QString& lo
         }
     }
 
-    // Determine correct mods folder path
-    QString root = m_instance->instanceRoot();
-    QString primaryMods = FS::PathCombine(root, ".minecraft", "mods");
-    QString altMods = FS::PathCombine(root, "minecraft", "mods");
-
-    if (QDir(altMods).exists()) {
-        m_modsDirPath = altMods;
-    } else {
-        m_modsDirPath = primaryMods;
-    }
-
+    // Determine correct mods folder path using the instance's canonical mods directory
+    FS::ensureFolderPathExists(m_instance->gameRoot());
+    m_modsDirPath = m_instance->modsRoot();
     FS::ensureFolderPathExists(m_modsDirPath);
+
+    // If an older sync created .minecraft/mods while gameRoot is minecraft/, migrate existing files
+    QString legacyDotMcMods = FS::PathCombine(m_instance->instanceRoot(), ".minecraft", "mods");
+    if (QDir(legacyDotMcMods).exists() && legacyDotMcMods != m_modsDirPath) {
+        QDir legacyDir(legacyDotMcMods);
+        for (const QString& file : legacyDir.entryList(QDir::Files)) {
+            QString src = legacyDir.absoluteFilePath(file);
+            QString dst = FS::PathCombine(m_modsDirPath, file);
+            if (!QFile::exists(dst)) {
+                QFile::rename(src, dst);
+            } else {
+                QFile::remove(src);
+            }
+        }
+        legacyDir.removeRecursively();
+    }
     return true;
 }
 

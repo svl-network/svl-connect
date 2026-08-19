@@ -5,7 +5,7 @@
 #include <QGraphicsDropShadowEffect>
 
 SVLLoadingOverlay::SVLLoadingOverlay(QWidget* parent)
-    : QDialog(parent, Qt::Dialog | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint)
+    : QDialog(parent, Qt::Dialog | Qt::FramelessWindowHint)
 {
     setAttribute(Qt::WA_TranslucentBackground, true);
     setAttribute(Qt::WA_DeleteOnClose, false);
