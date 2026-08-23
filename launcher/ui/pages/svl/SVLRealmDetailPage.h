@@ -30,8 +30,12 @@ private:
     void loadBanner(const QString& bannerUrl);
     void applyBannerPixmap(const QPixmap& originalPixmap);
 
+protected:
+    void resizeEvent(QResizeEvent* event) override;
+
 private:
     SVLServerModel m_server;
+    QPixmap m_cachedBannerPixmap;
 
     // Header widgets
     QPushButton* m_backBtn = nullptr;

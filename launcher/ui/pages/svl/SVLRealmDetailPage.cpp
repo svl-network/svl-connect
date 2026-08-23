@@ -308,6 +308,7 @@ void SVLRealmDetailPage::setupUI()
 void SVLRealmDetailPage::setServer(const SVLServerModel& server)
 {
     m_server = server;
+    m_cachedBannerPixmap = QPixmap();
     updateUI();
 }
 
@@ -460,10 +461,26 @@ void SVLRealmDetailPage::loadBanner(const QString& bannerUrl)
             QByteArray data = reply->readAll();
             QPixmap pix;
             if (pix.loadFromData(data)) {
+                m_cachedBannerPixmap = pix;
                 applyBannerPixmap(pix);
             }
         }
     });
+}
+
+void SVLRealmDetailPage::resizeEvent(QResizeEvent* event)
+{
+    QWidget::resizeEvent(event);
+    if (m_bannerFrame && m_bannerBgLabel) {
+        int w = m_bannerFrame->width();
+        int h = m_bannerFrame->height();
+        if (w > 0 && h > 0) {
+            m_bannerBgLabel->setGeometry(0, 0, w, h);
+            if (!m_cachedBannerPixmap.isNull()) {
+                applyBannerPixmap(m_cachedBannerPixmap);
+            }
+        }
+    }
 }
 
 void SVLRealmDetailPage::applyBannerPixmap(const QPixmap& originalPixmap)

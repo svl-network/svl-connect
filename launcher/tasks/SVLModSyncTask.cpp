@@ -175,6 +175,7 @@ void SVLModSyncTask::processManifest(const QByteArray& data)
             fabricApi.projectId = "P7dR8mAc";
             fabricApi.fileName = QString("fabric-api-0.102.0+%1.jar").arg(m_mcVersion);
             fabricApi.tier = "official";
+            fabricApi.targetFolder = "mods";
             fabricApi.downloadUrl = QString("https://cdn.modrinth.com/data/P7dR8mAc/versions/0.102.0+%1/fabric-api-0.102.0+%1.jar").arg(m_mcVersion);
             m_manifestMods.prepend(fabricApi);
         }
@@ -285,7 +286,7 @@ bool SVLModSyncTask::prepareInstance(const QString& mcVersion, const QString& lo
         targetLoaderUid = "net.minecraftforge";
         targetLoaderName = "Forge";
         if (targetLoaderVersion.isEmpty()) {
-            targetLoaderVersion = mcVersion.startsWith("1.21.11") ? "61.2.1" : "52.1.16";
+            targetLoaderVersion = mcVersion.startsWith("1.21.1") ? "61.2.1" : "52.1.16";
         }
     }
 
@@ -378,9 +379,13 @@ void SVLModSyncTask::performCleanSyncAndDownload()
     QStringList syncFolders = { "mods", "shaderpacks", "resourcepacks" };
 
     QMap<QString, SVLModEntry> manifestBySha;
+    QSet<QString> manifestFileNames;
     for (const auto& mod : m_manifestMods) {
         if (!mod.sha256.isEmpty()) {
             manifestBySha.insert(mod.sha256.toLower().trimmed(), mod);
+        }
+        if (!mod.fileName.isEmpty()) {
+            manifestFileNames.insert(mod.fileName.toLower().trimmed());
         }
     }
 
@@ -401,7 +406,17 @@ void SVLModSyncTask::performCleanSyncAndDownload()
                 QString hash = QCryptographicHash::hash(file.readAll(), QCryptographicHash::Sha256).toHex().toLower().trimmed();
                 file.close();
 
-                if (!manifestBySha.contains(hash)) {
+                bool isManifestMatch = manifestBySha.contains(hash);
+                if (!isManifestMatch && manifestFileNames.contains(localFile.toLower().trimmed())) {
+                    for (const auto& m : m_manifestMods) {
+                        if (m.fileName.compare(localFile, Qt::CaseInsensitive) == 0 && (m.sha256.isEmpty() || m.sha256.toLower().trimmed() == hash)) {
+                            isManifestMatch = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!isManifestMatch) {
                     // Only clean non-mod folders if the manifest explicitly targets them
                     bool folderHasManifestEntries = false;
                     for (const auto& m : m_manifestMods) {
@@ -417,6 +432,7 @@ void SVLModSyncTask::performCleanSyncAndDownload()
                     }
                 } else {
                     localHashes.insert(hash);
+                    localHashes.insert(localFile.toLower().trimmed());
                 }
             }
         }
@@ -429,8 +445,15 @@ void SVLModSyncTask::performCleanSyncAndDownload()
             continue;
         }
         QString cleanSha = mod.sha256.toLower().trimmed();
-        if (!localHashes.contains(cleanSha)) {
-            m_modsToDownload.append(mod);
+        QString cleanName = mod.fileName.toLower().trimmed();
+        if (!cleanSha.isEmpty()) {
+            if (!localHashes.contains(cleanSha)) {
+                m_modsToDownload.append(mod);
+            }
+        } else {
+            if (!localHashes.contains(cleanName)) {
+                m_modsToDownload.append(mod);
+            }
         }
     }
 

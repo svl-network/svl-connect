@@ -421,13 +421,22 @@ void SVLModrinthBrowser::downloadAndVerifyJar(const QString& downloadUrl, const 
     // Determine destination mods folder
     QString destDir = m_targetModsDir;
     if (destDir.isEmpty()) {
-        QString baseDir = APPLICATION->instances()->primaryDir();
-        if (baseDir.isEmpty()) {
-            baseDir = FS::PathCombine(APPLICATION->dataRoot(), "instances");
+        QString selectedId = APPLICATION->settings()->get("SelectedInstance").toString();
+        auto inst = APPLICATION->instances()->getInstanceById(selectedId);
+        if (!inst && APPLICATION->instances()->count() > 0) {
+            inst = APPLICATION->instances()->at(0);
         }
-        destDir = FS::PathCombine(baseDir, "svl_demo_realm", ".minecraft", "mods");
-        if (!QDir(destDir).exists()) {
-            destDir = FS::PathCombine(baseDir, "Sunveil Modded Server", "minecraft", "mods");
+        if (inst) {
+            destDir = inst->modsRoot();
+        } else {
+            QString baseDir = APPLICATION->instances()->primaryDir();
+            if (baseDir.isEmpty()) {
+                baseDir = FS::PathCombine(APPLICATION->dataRoot(), "instances");
+            }
+            destDir = FS::PathCombine(baseDir, "svl_demo_realm", "minecraft", "mods");
+            if (!QDir(destDir).exists()) {
+                destDir = FS::PathCombine(baseDir, "svl_demo_realm", ".minecraft", "mods");
+            }
         }
     }
     FS::ensureFolderPathExists(destDir);
