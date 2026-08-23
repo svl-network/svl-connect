@@ -87,8 +87,8 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ github.ref }}
-          name: Prism Launcher ${{ env.VERSION }}
-          draft: true
+          name: Sunveil Connect ${{ env.VERSION }}
+          draft: false
           prerelease: false
           fail_on_unmatched_files: true
           files: |
