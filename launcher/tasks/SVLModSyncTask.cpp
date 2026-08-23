@@ -130,20 +130,10 @@ void SVLModSyncTask::processManifest(const QByteArray& data)
     m_manifestMods.clear();
     QList<SVLModEntry> communityMods;
 
-    // Check if the server platform is a pure plugin server
+    // Check if the server platform is a pure plugin server (Paper/Spigot/Velocity/etc)
     bool isPluginServer = (m_loader == "paper" || m_loader == "spigot" || m_loader == "bukkit" ||
                            m_loader == "purpur" || m_loader == "folia" || m_loader == "velocity" ||
                            m_loader == "bungee" || m_loader == "bungeecord" || m_loader == "waterfall");
-
-    static const QStringList serverOnlyKeywords = {
-        "authme", "luckperms", "worldguard", "worldedit-bukkit", "protocollib",
-        "viaversion", "viabackwards", "viarewind", "tradeshop", "discordsrv",
-        "chunky", "floodgate", "geyser", "lagfixer", "skinsrestorer",
-        "tebex", "veinminer-paper", "antigrief", "vault", "essentials",
-        "clearlag", "multiverse", "citizens", "griefprevention", "coreprotect",
-        "spark-bukkit", "placeholderapi", "dynmap", "bluemap", "squaremap",
-        "decentholograms", "holographicdisplays", "chatex", "tab"
-    };
 
     QJsonArray modsArray = obj.value("mods").toArray();
     for (const QJsonValue& val : modsArray) {
@@ -154,25 +144,11 @@ void SVLModSyncTask::processManifest(const QByteArray& data)
         entry.sha256 = modObj.value("sha256").toString().toLower();
         entry.downloadUrl = modObj.value("downloadUrl").toString();
         entry.tier = modObj.value("tier").toString("official").toLower();
+        entry.targetFolder = modObj.value("targetFolder").toString("mods").toLower();
 
-        QString lowerFile = entry.fileName.toLower();
-        bool isServerPlugin = isPluginServer ||
-                              lowerFile.endsWith("-bukkit.jar") || lowerFile.endsWith("-spigot.jar") ||
-                              lowerFile.endsWith("-paper.jar") || lowerFile.contains("-bukkit-") ||
-                              lowerFile.contains("-spigot-") || lowerFile.contains("-paper-") ||
-                              lowerFile.contains("bukkit") || lowerFile.contains("spigot");
-
-        if (!isServerPlugin) {
-            for (const auto& keyword : serverOnlyKeywords) {
-                if (lowerFile.startsWith(keyword) || lowerFile.contains(keyword)) {
-                    isServerPlugin = true;
-                    break;
-                }
-            }
-        }
-
-        if (isServerPlugin) {
-            qDebug() << "[SVLModSync] Excluding server-only plugin from client instance:" << entry.fileName;
+        // If the server is a pure plugin server (Paper/Spigot), ignore server-only plugins
+        if (isPluginServer) {
+            qDebug() << "[SVLModSync] Excluding plugin from client instance on pure plugin server:" << entry.fileName;
             continue;
         }
 
@@ -396,63 +372,97 @@ bool SVLModSyncTask::prepareInstance(const QString& mcVersion, const QString& lo
 
 void SVLModSyncTask::performCleanSyncAndDownload()
 {
-    setStatus(tr("Verifying local mod hashes..."));
+    setStatus(tr("Verifying local mods & shaderpacks..."));
 
-    QDir modsDir(m_modsDirPath);
-    QStringList localFiles = modsDir.entryList(QStringList() << "*.jar", QDir::Files);
+    QString gameRoot = m_instance->gameRoot();
+    QStringList syncFolders = { "mods", "shaderpacks", "resourcepacks" };
 
     QMap<QString, SVLModEntry> manifestBySha;
     for (const auto& mod : m_manifestMods) {
         if (!mod.sha256.isEmpty()) {
-            manifestBySha.insert(mod.sha256, mod);
+            manifestBySha.insert(mod.sha256.toLower().trimmed(), mod);
         }
     }
 
     QSet<QString> localHashes;
-    for (const QString& localFile : localFiles) {
-        QString fullPath = modsDir.absoluteFilePath(localFile);
-        QFile file(fullPath);
-        if (file.open(QIODevice::ReadOnly)) {
-            QString hash = QCryptographicHash::hash(file.readAll(), QCryptographicHash::Sha256).toHex().toLower();
-            file.close();
 
-            if (!manifestBySha.contains(hash)) {
-                // Delete rogue or outdated local jar (Clean Sync)
-                qDebug() << "[SVLModSync] Deleting local unlisted/outdated jar:" << localFile;
-                QFile::remove(fullPath);
-            } else {
-                localHashes.insert(hash);
+    for (const QString& folderName : syncFolders) {
+        QString folderPath = (folderName == "mods") ? m_modsDirPath : FS::PathCombine(gameRoot, folderName);
+        FS::ensureFolderPathExists(folderPath);
+
+        QDir dir(folderPath);
+        QStringList fileFilters = (folderName == "mods") ? (QStringList() << "*.jar" << "*.JAR") : (QStringList() << "*.zip" << "*.ZIP" << "*.jar" << "*.JAR");
+        QStringList localFiles = dir.entryList(fileFilters, QDir::Files);
+
+        for (const QString& localFile : localFiles) {
+            QString fullPath = dir.absoluteFilePath(localFile);
+            QFile file(fullPath);
+            if (file.open(QIODevice::ReadOnly)) {
+                QString hash = QCryptographicHash::hash(file.readAll(), QCryptographicHash::Sha256).toHex().toLower().trimmed();
+                file.close();
+
+                if (!manifestBySha.contains(hash)) {
+                    // Only clean non-mod folders if the manifest explicitly targets them
+                    bool folderHasManifestEntries = false;
+                    for (const auto& m : m_manifestMods) {
+                        QString target = m.targetFolder.isEmpty() ? "mods" : m.targetFolder.toLower();
+                        if (target == folderName) {
+                            folderHasManifestEntries = true;
+                            break;
+                        }
+                    }
+                    if (folderName == "mods" || folderHasManifestEntries) {
+                        qDebug() << "[SVLModSync] Deleting local unlisted/outdated file in" << folderName << ":" << localFile;
+                        QFile::remove(fullPath);
+                    }
+                } else {
+                    localHashes.insert(hash);
+                }
             }
         }
     }
 
-    // Determine missing mods
+    // Determine missing mods & assets
     m_modsToDownload.clear();
     for (const auto& mod : m_manifestMods) {
         if (mod.downloadUrl.isEmpty()) {
             continue;
         }
-        if (!localHashes.contains(mod.sha256)) {
+        QString cleanSha = mod.sha256.toLower().trimmed();
+        if (!localHashes.contains(cleanSha)) {
             m_modsToDownload.append(mod);
         }
     }
 
     if (m_modsToDownload.isEmpty()) {
-        qDebug() << "[SVLModSync] All mods are up-to-date and cryptographically verified.";
+        qDebug() << "[SVLModSync] All mods and shaderpacks are up-to-date and cryptographically verified.";
         finalizeAndLaunch();
         return;
     }
 
-    setStatus(tr("Downloading %1 mod(s)...").arg(m_modsToDownload.size()));
+    setStatus(tr("Downloading %1 mod(s) and asset(s)...").arg(m_modsToDownload.size()));
     setProgress(0, 100);
 
-    m_netJob = makeShared<NetJob>(tr("Downloading mods for %1").arg(m_serverName), APPLICATION->network());
+    m_netJob = makeShared<NetJob>(tr("Downloading assets for %1").arg(m_serverName), APPLICATION->network());
 
     for (const auto& mod : m_modsToDownload) {
-        QString targetPath = FS::PathCombine(m_modsDirPath, mod.fileName);
-        auto req = Net::NetRequest::makeFile(QUrl(mod.downloadUrl), targetPath);
+        QString folder = mod.targetFolder.isEmpty() ? "mods" : mod.targetFolder.toLower();
+        QString destFolder = (folder == "mods") ? m_modsDirPath : FS::PathCombine(gameRoot, folder);
+        FS::ensureFolderPathExists(destFolder);
+
+        QString targetPath = FS::PathCombine(destFolder, mod.fileName);
+        if (QFile::exists(targetPath)) {
+            QFile::remove(targetPath);
+        }
+
+        QUrl url = QUrl::fromEncoded(mod.downloadUrl.toUtf8());
+        if (!url.isValid() || url.scheme().isEmpty()) {
+            url = QUrl(mod.downloadUrl);
+        }
+
+        auto req = Net::NetRequest::makeFile(url, targetPath);
         if (!mod.sha256.isEmpty()) {
-            req->addValidator(new Net::ChecksumValidator(QCryptographicHash::Sha256, mod.sha256));
+            req->addValidator(new Net::ChecksumValidator(QCryptographicHash::Sha256, mod.sha256.toLower().trimmed()));
         }
         m_netJob->addNetAction(req);
     }

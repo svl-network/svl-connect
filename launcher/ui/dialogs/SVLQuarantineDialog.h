@@ -11,6 +11,7 @@ struct SVLModEntry {
     QString sha256;
     QString downloadUrl;
     QString tier; // "official" or "community"
+    QString targetFolder = "mods"; // "mods", "shaderpacks", "resourcepacks", "config"
 };
 
 class SVLQuarantineDialog : public QDialog {

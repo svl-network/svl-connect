@@ -2,6 +2,7 @@
 
 ### Live Commit History (main branch)
 
+* **feat: implement SVLModSyncTask and UI components for automated server mod synchronization** `(10db6ad6f)` - *HeyTaxx*, 2026-08-19
 * **feat: implement SVLModSyncTask for automated server manifest processing and mod synchronization** `(54f60727e)` - *HeyTaxx*, 2026-08-18
 * **feat: implement server mod synchronization logic and UI integration** `(16297558a)` - *HeyTaxx*, 2026-08-18
 * **feat: implement server mod synchronization, update management, and SVL connection UI page** `(08c8cfc3d)` - *HeyTaxx*, 2026-08-18
@@ -31,7 +32,6 @@
 * **Avoid makeShared copying arguments (#5929)** `(89272ace0)` - *Octol1ttle*, 2026-08-12
 * **fix: regenerate instance UUID on import (#5930)** `(6a0d55219)` - *Octol1ttle*, 2026-08-12
 * **DCO Remediation Commit for Reuben Sonnenschein <137012810+frigtear@users.noreply.github.com>** `(7a1656e78)` - *Reuben Sonnenschein*, 2026-08-11
-* **Set ModrinthInstanceCreationTask abortable to fix bug where you cant abort it** `(b81d2d064)` - *Reuben Sonnenschein*, 2026-08-11
 
 ---
 *Compiled directly from repository source tree.*
