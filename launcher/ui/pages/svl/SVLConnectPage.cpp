@@ -320,7 +320,7 @@ void SVLConnectPage::onServersReceived()
                     } else {
                         model.modCount = obj.value("modCount").toInt(13);
                     }
-                    model.isOnline = obj.contains("online") ? obj.value("online").toBool(true) : (statObj.contains("online") ? statObj.value("online").toBool(true) : true);
+                    model.isOnline = obj.contains("online") ? obj.value("online").toBool(false) : (statObj.contains("online") ? statObj.value("online").toBool(false) : false);
 
                     model.boosts = obj.value("boosts").toInt(0);
                     model.sponsored = obj.value("sponsored").toBool(false);
@@ -353,7 +353,7 @@ void SVLConnectPage::onServersReceived()
         defaultServer.motd = "Official High-Performance Modded Survival & Adventure Infrastructure.";
         defaultServer.verified = true;
         defaultServer.modCount = 13;
-        defaultServer.isOnline = !hasApiError;
+        defaultServer.isOnline = false;
         m_allServers.append(defaultServer);
     }
 
