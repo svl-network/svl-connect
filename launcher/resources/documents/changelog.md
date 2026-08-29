@@ -2,6 +2,8 @@
 
 ### Live Commit History (main branch)
 
+* **fix(assets): generate and embed Sunveil multi-resolution ICO and 256px PNG binary assets** `(9f3d54f59)` - *HeyTaxx*, 2026-08-24
+* **style(branding): replace Prism assets with Sunveil solar prism and update server SVG icons and offline status UI** `(44cf31060)` - *HeyTaxx*, 2026-08-24
 * **design(brand): create custom Sunveil Connect vector SVG icon and update all icon templates** `(88934bdb9)` - *HeyTaxx*, 2026-08-23
 * **ci: publish public non-draft release as Sunveil Connect** `(6581692d8)` - *HeyTaxx*, 2026-08-23
 * **fix(launcher): resolve mod sync redownload loop, forge typo, active instance discovery, and banner responsiveness** `(5980613bb)` - *HeyTaxx*, 2026-08-23
@@ -30,8 +32,6 @@
 * **Update cachix/install-nix-action digest to 13d8dd5 (#5943)** `(4527b9bec)` - *Alexandru Ionut Tripon*, 2026-08-13
 * **Fix manual refresh being skipped on active account (#5920)** `(7a54e37ba)` - *Alexandru Ionut Tripon*, 2026-08-13
 * **The PR where I fix the typo (#5944)** `(5c3ffd4a5)` - *Alexandru Ionut Tripon*, 2026-08-13
-* **This is the commit where I fix the typo** `(4b4051aa6)` - *Octol1ttle*, 2026-08-13
-* **Update cachix/install-nix-action digest to 13d8dd5** `(65ba10bee)` - *renovate[bot]*, 2026-08-13
 
 ---
 *Compiled directly from repository source tree.*
