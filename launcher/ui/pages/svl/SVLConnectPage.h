@@ -37,6 +37,7 @@ struct SVLServerModel {
     bool verified = true;
     int modCount = 13;
     bool isOnline = true;
+    bool isTunnel = false;
     int boosts = 0;
     bool sponsored = false;
     QString bannerUrl;

@@ -326,6 +326,10 @@ void SVLConnectPage::onServersReceived()
                     model.sponsored = obj.value("sponsored").toBool(false);
                     model.bannerUrl = obj.value("bannerUrl").toString();
 
+                    if (obj.contains("tunnel") && obj.value("tunnel").isObject()) {
+                        model.isTunnel = obj.value("tunnel").toObject().value("active").toBool(false);
+                    }
+
                     QJsonObject linksObj = obj.value("links").toObject();
                     model.links.store = linksObj.value("store").toString();
                     model.links.discord = linksObj.value("discord").toString();
@@ -518,6 +522,14 @@ QWidget* SVLConnectPage::createServerCard(const SVLServerModel& server)
         pingLabel->setObjectName("badgeMeta");
         pingLabel->setStyleSheet("background-color: #111111; color: #A1A1AA; border: 1px solid #2C2C2E; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 600;");
         badgesLayout->addWidget(pingLabel);
+    }
+
+    if (server.isTunnel) {
+        auto* tunnelLabel = new QLabel(tr("🛡️ SVL SHIELD"), card);
+        tunnelLabel->setObjectName("badgeMeta");
+        tunnelLabel->setStyleSheet("background-color: #0F2E1E; color: #00E599; border: 1px solid #10B981; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 700;");
+        tunnelLabel->setToolTip(tr("Protected by Sunveil Secure Tunnel: Zero-portforwarding & 100% masked IP."));
+        badgesLayout->addWidget(tunnelLabel);
     }
 
     badgesLayout->addStretch();
