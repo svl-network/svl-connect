@@ -126,7 +126,7 @@ void LauncherPartLaunch::executeTask()
 #else
     args << classPath.join(':');
 #endif
-    args << "org.prismlauncher.EntryPoint";
+    args << "net.sunveil.connect.EntryPoint";
 
     qDebug() << args.join(' ');
 

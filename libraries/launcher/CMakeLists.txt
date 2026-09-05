@@ -3,42 +3,44 @@ project(launcher Java)
 find_package(Java 1.7 REQUIRED COMPONENTS Development)
 
 include(UseJava)
-set(CMAKE_JAVA_JAR_ENTRY_POINT org.prismlauncher.EntryPoint)
+set(CMAKE_JAVA_JAR_ENTRY_POINT net.sunveil.connect.EntryPoint)
 set(CMAKE_JAVA_COMPILE_FLAGS -target 8 -source 8)
 
 set(SRC
-    org/prismlauncher/EntryPoint.java
-    org/prismlauncher/launcher/Launcher.java
-    org/prismlauncher/launcher/impl/AbstractLauncher.java
-    org/prismlauncher/launcher/impl/StandardLauncher.java
-    org/prismlauncher/exception/ParameterNotFoundException.java
-    org/prismlauncher/exception/ParseException.java
-    org/prismlauncher/utils/Parameters.java
-    org/prismlauncher/utils/ReflectionUtils.java
-    org/prismlauncher/utils/logging/Level.java
-    org/prismlauncher/utils/logging/Log.java
-    org/prismlauncher/legacy/LegacyProxy.java
+    net/sunveil/connect/EntryPoint.java
+    net/sunveil/connect/SystemProperties.java
+    net/sunveil/connect/launcher/Launcher.java
+    net/sunveil/connect/launcher/impl/AbstractLauncher.java
+    net/sunveil/connect/launcher/impl/StandardLauncher.java
+    net/sunveil/connect/exception/ParameterNotFoundException.java
+    net/sunveil/connect/exception/ParseException.java
+    net/sunveil/connect/utils/Parameters.java
+    net/sunveil/connect/utils/ReflectionUtils.java
+    net/sunveil/connect/utils/logging/Level.java
+    net/sunveil/connect/utils/logging/Log.java
+    net/sunveil/connect/legacy/LegacyProxy.java
 )
 
 set(LEGACY_SRC
-    legacy/org/prismlauncher/legacy/LegacyFrame.java
-    legacy/org/prismlauncher/legacy/LegacyLauncher.java
-    legacy/org/prismlauncher/legacy/fix/online/Handler.java
-    legacy/org/prismlauncher/legacy/fix/online/OnlineFixes.java
-    legacy/org/prismlauncher/legacy/fix/online/OnlineModeFix.java
-    legacy/org/prismlauncher/legacy/fix/online/SkinFix.java
-    legacy/org/prismlauncher/legacy/utils/Base64.java
-    legacy/org/prismlauncher/legacy/utils/api/MojangApi.java
-    legacy/org/prismlauncher/legacy/utils/api/Texture.java
-    legacy/org/prismlauncher/legacy/utils/json/JsonParseException.java
-    legacy/org/prismlauncher/legacy/utils/json/JsonParser.java
-    legacy/org/prismlauncher/legacy/utils/url/ByteArrayUrlConnection.java
-    legacy/org/prismlauncher/legacy/utils/url/UrlUtils.java
+    legacy/net/sunveil/connect/legacy/LegacyFrame.java
+    legacy/net/sunveil/connect/legacy/LegacyLauncher.java
+    legacy/net/sunveil/connect/legacy/fix/online/Handler.java
+    legacy/net/sunveil/connect/legacy/fix/online/OnlineFixes.java
+    legacy/net/sunveil/connect/legacy/fix/online/OnlineModeFix.java
+    legacy/net/sunveil/connect/legacy/fix/online/SkinFix.java
+    legacy/net/sunveil/connect/legacy/utils/Base64.java
+    legacy/net/sunveil/connect/legacy/utils/api/MojangApi.java
+    legacy/net/sunveil/connect/legacy/utils/api/Texture.java
+    legacy/net/sunveil/connect/legacy/utils/json/JsonParseException.java
+    legacy/net/sunveil/connect/legacy/utils/json/JsonParser.java
+    legacy/net/sunveil/connect/legacy/utils/url/ByteArrayUrlConnection.java
+    legacy/net/sunveil/connect/legacy/utils/url/UrlUtils.java
     legacy/net/minecraft/Launcher.java
-    legacy/org/prismlauncher/legacy/LegacyProxy.java
+    legacy/net/sunveil/connect/legacy/LegacyProxy.java
 )
 
 add_jar(NewLaunch ${SRC})
 add_jar(NewLaunchLegacy ${LEGACY_SRC} INCLUDE_JARS NewLaunch)
 install_jar(NewLaunch "${JARS_DEST_DIR}")
 install_jar(NewLaunchLegacy "${JARS_DEST_DIR}")
+

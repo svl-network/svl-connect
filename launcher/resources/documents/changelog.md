@@ -2,6 +2,7 @@
 
 ### Live Commit History (main branch)
 
+* **docs: add project changelog and remove obsolete documentation file** `(9f243f797)` - *HeyTaxx*, 2026-08-29
 * **feat: implement SVLConnectPage to display and manage server connections via remote API** `(53fc40c25)` - *HeyTaxx*, 2026-08-29
 * **docs: add project changelog and remove obsolete documentation file** `(ffd8b96b7)` - *HeyTaxx*, 2026-08-29
 * **fix(assets): generate and embed Sunveil multi-resolution ICO and 256px PNG binary assets** `(9f3d54f59)` - *HeyTaxx*, 2026-08-24
@@ -31,7 +32,6 @@
 * **Update launcher/ui/dialogs/InstallLoaderDialog.cpp** `(fa61169bd)` - *Alexandru Ionut Tripon*, 2026-08-13
 * **fix: don't emit SettingChanged if the value didn't actually change** `(b9b97f134)` - *Octol1ttle*, 2026-08-14
 * **fix: remove unnecessary resets during startup** `(57d4cc720)` - *Octol1ttle*, 2026-08-14
-* **Update cachix/install-nix-action digest to 13d8dd5 (#5943)** `(4527b9bec)` - *Alexandru Ionut Tripon*, 2026-08-13
 
 ---
 *Compiled directly from repository source tree.*

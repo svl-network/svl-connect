@@ -87,6 +87,7 @@
 #include <java/JavaUtils.h>
 #include <launch/LaunchTask.h>
 #include <minecraft/MinecraftInstance.h>
+#include <minecraft/launch/MinecraftTarget.h>
 #include <minecraft/auth/AccountList.h>
 #include <net/ApiRequest.h>
 #include <net/NetJob.h>
@@ -1837,15 +1838,18 @@ void MainWindow::showInstancesView()
     }
 }
 
-void MainWindow::launchSVLServer(MinecraftInstance* instance, const QString& /*ip*/, quint16 /*port*/)
+void MainWindow::launchSVLServer(MinecraftInstance* instance, const QString& ip, quint16 port)
 {
     if (!instance) {
         return;
     }
-    // Launch directly to Minecraft client. The target server has already been auto-populated
-    // into servers.dat by SVLModSyncTask, preventing aggressive Quick Play connection failures
-    // (such as "Failed to Quick Play - Connection refused: getsockopt") if the server is offline or loading.
-    APPLICATION->launch(instance, LaunchMode::Normal);
+    MinecraftTarget::Ptr target = nullptr;
+    if (!ip.isEmpty()) {
+        target = std::make_shared<MinecraftTarget>();
+        target->address = ip;
+        target->port = (port > 0) ? port : 25565;
+    }
+    APPLICATION->launch(instance, LaunchMode::Normal, target);
 }
 
 void MainWindow::onGameSessionEnded()
