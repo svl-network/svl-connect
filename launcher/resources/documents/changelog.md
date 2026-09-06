@@ -2,6 +2,9 @@
 
 ### Live Commit History (main branch)
 
+* **feat: implement SVLConnectPage for server browsing and mod synchronization management** `(8e0ae3118)` - *HeyTaxx*, 2026-09-06
+* **docs: add ko-fi support button to README** `(4d6bdc7e7)` - *HeyTaxx*, 2026-09-06
+* **feat: implement modular legacy launcher support with online mode fixes and utility libraries** `(746961483)` - *HeyTaxx*, 2026-09-05
 * **docs: add project changelog and remove obsolete documentation file** `(9f243f797)` - *HeyTaxx*, 2026-08-29
 * **feat: implement SVLConnectPage to display and manage server connections via remote API** `(53fc40c25)` - *HeyTaxx*, 2026-08-29
 * **docs: add project changelog and remove obsolete documentation file** `(ffd8b96b7)` - *HeyTaxx*, 2026-08-29
@@ -29,9 +32,6 @@
 * **Less settings saving (#5945)** `(bcd87f2b8)` - *Octol1ttle*, 2026-08-14
 * **Bump C++ standard to 23 (#5911)** `(c40a2077e)` - *Octol1ttle*, 2026-08-14
 * **Add conflict prompt to the Install Loader dialog (#5758)** `(8f8cbde9a)` - *Octol1ttle*, 2026-08-13
-* **Update launcher/ui/dialogs/InstallLoaderDialog.cpp** `(fa61169bd)` - *Alexandru Ionut Tripon*, 2026-08-13
-* **fix: don't emit SettingChanged if the value didn't actually change** `(b9b97f134)` - *Octol1ttle*, 2026-08-14
-* **fix: remove unnecessary resets during startup** `(57d4cc720)` - *Octol1ttle*, 2026-08-14
 
 ---
 *Compiled directly from repository source tree.*

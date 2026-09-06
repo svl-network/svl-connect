@@ -402,6 +402,14 @@ Section "@Launcher_DisplayName@"
   WriteRegStr HKCU Software\Classes\prismlauncher "URL Protocol" ""
   WriteRegStr HKCU Software\Classes\prismlauncher\shell\open\command "" '"$INSTDIR\@Launcher_APP_BINARY_NAME@.exe" "%1"'
 
+  ; Write the URL Handler into registry for sunveil protocol
+  WriteRegStr HKCU Software\Classes\sunveil "URL Protocol" ""
+  WriteRegStr HKCU Software\Classes\sunveil\shell\open\command "" '"$INSTDIR\@Launcher_APP_BINARY_NAME@.exe" "%1"'
+
+  ; Write the URL Handler into registry for SunveilConnect protocol
+  WriteRegStr HKCU Software\Classes\SunveilConnect "URL Protocol" ""
+  WriteRegStr HKCU Software\Classes\SunveilConnect\shell\open\command "" '"$INSTDIR\@Launcher_APP_BINARY_NAME@.exe" "%1"'
+
   ; Write the uninstall keys for Windows
   ; https://learn.microsoft.com/en-us/windows/win32/msi/uninstall-registry-key
   ${GetParameters} $R0

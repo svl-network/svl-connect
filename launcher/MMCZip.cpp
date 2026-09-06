@@ -207,16 +207,15 @@ std::optional<QStringList> extractSubDir(ArchiveReader* zip, const QString& subd
             auto relative_file_name = QDir::fromNativeSeparators(file_name.mid(subdir.size()));
             auto original_name = relative_file_name;
 
-            // Fix subdirs/files ending with a / getting transformed into absolute paths
-            if (relative_file_name.startsWith('/'))
+            // Fix subdirs/files starting with / or \ getting transformed into absolute paths
+            while (relative_file_name.startsWith('/') || relative_file_name.startsWith('\\')) {
                 relative_file_name = relative_file_name.mid(1);
+            }
 
             // Fix weird "folders with a single file get squashed" thing
             QString sub_path;
             if (relative_file_name.contains('/') && !relative_file_name.endsWith('/')) {
                 sub_path = relative_file_name.section('/', 0, -2) + '/';
-                FS::ensureFolderPathExists(FS::PathCombine(target, sub_path));
-
                 relative_file_name = relative_file_name.split('/').last();
             }
             QString target_file_path;
@@ -228,11 +227,17 @@ std::optional<QStringList> extractSubDir(ArchiveReader* zip, const QString& subd
                     target_file_path += '/';
             }
 
+            // Strict Zip Slip defense: verify path is strictly inside target before creating folders or writing files
             if (!target_top_dir.isParentOf(QUrl::fromLocalFile(target_file_path))) {
-                qWarning() << "Extracting" << relative_file_name << "was cancelled, because it was effectively outside of the target path"
+                qWarning() << "Extracting" << original_name << "was cancelled, because it was effectively outside of the target path"
                            << target;
                 return false;
             }
+
+            if (!sub_path.isEmpty()) {
+                FS::ensureFolderPathExists(FS::PathCombine(target, sub_path));
+            }
+
             if (!f->writeFile(ext, target_file_path, target)) {
                 qWarning() << "Failed to extract file" << original_name << "to" << target_file_path;
                 return false;
@@ -283,6 +288,14 @@ bool extractFile(QString fileCompressed, QString file, QString target)
     if (fileInfo.size() == 22) {
         return true;
     }
+
+    // Ensure target folder exists safely
+    QFileInfo targetInfo(target);
+    QString targetDir = targetInfo.absolutePath();
+    if (!FS::ensureFolderPathExists(targetDir)) {
+        return false;
+    }
+
     ArchiveReader zip(fileCompressed);
     auto f = zip.goToFile(file);
     if (!f) {

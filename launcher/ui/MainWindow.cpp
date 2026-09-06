@@ -1035,9 +1035,39 @@ void MainWindow::processURLs(QList<QUrl> urls)
                     dlUrlDialod.execWithTask(job.get());
                 }
 
-            } else if ((url.scheme() == BuildConfig.LAUNCHER_APP_BINARY_NAME || url.scheme() == "SunveilConnect") && !isExternalURLImport) {
-                QVariantMap receivedData;
+            } else if ((url.scheme().toLower() == BuildConfig.LAUNCHER_APP_BINARY_NAME.toLower() ||
+                        url.scheme().toLower() == "sunveilconnect" ||
+                        url.scheme().toLower() == "sunveil" ||
+                        url.scheme().toLower() == "svl-connect" ||
+                        url.scheme().toLower() == "svl") && !isExternalURLImport) {
+                const auto host = url.host().toLower();
                 const QUrlQuery query(url.query());
+
+                if (host == "connect" || query.hasQueryItem("server") || query.hasQueryItem("host")) {
+                    QString serverKey = query.queryItemValue("server");
+                    QString sHost = query.queryItemValue("host");
+                    quint16 sPort = static_cast<quint16>(query.queryItemValue("port").toUShort());
+                    if (sPort == 0) sPort = 25565;
+                    if (sHost.isEmpty()) sHost = "play.sunveil.net";
+                    if (serverKey.isEmpty()) serverKey = "svl_demo_realm";
+
+                    showServersView();
+                    if (m_svlConnectPage) {
+                        SVLServerModel srv;
+                        srv.serverKey = serverKey;
+                        srv.name = serverKey;
+                        srv.ip = sHost;
+                        srv.port = sPort;
+                        srv.isOnline = true;
+                        m_svlConnectPage->launchServer(srv);
+                    }
+                    this->show();
+                    this->raise();
+                    this->activateWindow();
+                    continue;
+                }
+
+                QVariantMap receivedData;
                 const auto items = query.queryItems();
                 for (auto it = items.begin(), end = items.end(); it != end; ++it)
                     receivedData.insert(it->first, it->second);
