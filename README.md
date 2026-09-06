@@ -11,6 +11,11 @@
   <br />This is a <b>fork</b> of the MultiMC Launcher and is <b>not</b> endorsed by it.
 </p>
 
+
+## Support the Project
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X8X815R6AF)
+
 ## Installation
 
 - All downloads and instructions for Sunveil Connect can be found on our [Website](https://SunveilConnect.org/download).
