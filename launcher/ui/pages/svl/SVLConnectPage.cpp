@@ -441,8 +441,8 @@ void SVLConnectPage::loadCustomServers()
         return;
     }
 
-    QByteArray data = file.readAll();
-    QJsonDocument doc = QJsonDocument::fromJson(data);
+    QByteArray fileBytes = file.readAll();
+    QJsonDocument doc = QJsonDocument::fromJson(fileBytes);
     if (doc.isArray()) {
         QJsonArray arr = doc.array();
         for (const auto& val : arr) {
