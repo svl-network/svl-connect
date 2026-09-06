@@ -2,6 +2,7 @@
 
 ### Live Commit History (main branch)
 
+* **fix: resolve variable shadowing warning in SVLConnectPage and update changelog** `(2fbf74f42)` - *HeyTaxx*, 2026-09-06
 * **feat: implement in-app manual custom server management and standalone instance launcher** `(0d6b2ce15)` - *HeyTaxx*, 2026-09-06
 * **feat: implement MMCZip utility and integrate SVLConnect pages into MainWindow** `(23b189354)` - *HeyTaxx*, 2026-09-06
 * **feat: implement SVLConnectPage for server browsing and mod synchronization management** `(8e0ae3118)` - *HeyTaxx*, 2026-09-06
@@ -31,7 +32,6 @@
 * **chore(nix): update lockfile (#5950)** `(863754699)` - *Octol1ttle*, 2026-08-16
 * **chore(nix): update lockfile** `(d211ed5c0)` - *github-actions[bot]*, 2026-08-16
 * **fix: set entity state before emitting success** `(93feac2ed)` - *Trial97*, 2026-08-15
-* **Less settings saving (#5945)** `(bcd87f2b8)` - *Octol1ttle*, 2026-08-14
 
 ---
 *Compiled directly from repository source tree.*
