@@ -400,26 +400,6 @@ void SVLConnectPage::onServersReceived()
         }
     }
 
-    // Supply official default server if offline or empty
-    if (m_allServers.isEmpty()) {
-        SVLServerModel defaultServer;
-        defaultServer.serverKey = "sunveil-modded";
-        defaultServer.name = "Sunveil Modded Server";
-        defaultServer.icon = ""; // Null -> triggers fallback generic cube / Sunveil logo
-        defaultServer.ip = "play.sunveil.net";
-        defaultServer.port = 25565;
-        defaultServer.mcVersion = "1.21.1";
-        defaultServer.loader = "forge";
-        defaultServer.loaderVersion = "52.0.18";
-        defaultServer.players = 0;
-        defaultServer.maxPlayers = 20;
-        defaultServer.motd = "Official High-Performance Modded Survival & Adventure Infrastructure.";
-        defaultServer.verified = true;
-        defaultServer.modCount = 13;
-        defaultServer.isOnline = false;
-        m_allServers.append(defaultServer);
-    }
-
     // Load and prepend user's local custom standalone servers
     loadCustomServers();
     for (int i = m_customServers.size() - 1; i >= 0; --i) {
@@ -692,12 +672,16 @@ void SVLConnectPage::renderServerCards()
         iconLabel->setStyleSheet("font-size: 48px; background: transparent;");
         emptyLayout->addWidget(iconLabel);
 
-        auto* noMatchesLabel = new QLabel(tr("No realms matching \"%1\"").arg(m_currentQuery), emptyWidget);
+        QString titleText = m_currentQuery.isEmpty() ? tr("No Minecraft servers found") : tr("No realms matching \"%1\"").arg(m_currentQuery);
+        auto* noMatchesLabel = new QLabel(titleText, emptyWidget);
         noMatchesLabel->setAlignment(Qt::AlignCenter);
         noMatchesLabel->setStyleSheet("color: #FFFFFF; font-size: 16px; font-weight: 700; background: transparent;");
         emptyLayout->addWidget(noMatchesLabel);
 
-        auto* subTextLabel = new QLabel(tr("Check your search terms, add a custom server above, or refresh the directory."), emptyWidget);
+        QString subText = m_currentQuery.isEmpty()
+                              ? tr("No live Bridge realms online yet. Click '➕ ADD SERVER' above to add your custom server!")
+                              : tr("Check your search terms, add a custom server above, or refresh the directory.");
+        auto* subTextLabel = new QLabel(subText, emptyWidget);
         subTextLabel->setAlignment(Qt::AlignCenter);
         subTextLabel->setStyleSheet("color: #71717A; font-size: 13px; font-weight: 400; background: transparent;");
         emptyLayout->addWidget(subTextLabel);
