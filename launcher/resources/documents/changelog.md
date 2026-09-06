@@ -2,6 +2,7 @@
 
 ### Live Commit History (main branch)
 
+* **fix(realms): strictly filter out all demo and template server keys from remote API responses** `(8e45d2746)` - *HeyTaxx*, 2026-09-06
 * **fix(realms): remove hardcoded fallback defaultServer and enhance clean empty state** `(87ec09ac5)` - *HeyTaxx*, 2026-09-06
 * **fix(branding): replace legacy Prism Launcher ICO and 256px icons with custom Sunveil assets and update repository metadata** `(b55d83b92)` - *HeyTaxx*, 2026-09-06
 * **fix: resolve variable shadowing warning in SVLConnectPage and update changelog** `(2fbf74f42)` - *HeyTaxx*, 2026-09-06
@@ -31,7 +32,6 @@
 * **feat: initialize SVL Connect launcher application infrastructure and project structure** `(13d4aa715)` - *HeyTaxx*, 2026-08-17
 * **feat: implement Sunveil Connect server-browser, fivem-style mod sync and quarantine dialog** `(8302c24f2)` - *HeyTaxx*, 2026-08-17
 * **fix: set entity state before emitting success (#5949)** `(6aa2c3d7e)` - *Alexandru Ionut Tripon*, 2026-08-17
-* **chore(nix): update lockfile (#5950)** `(863754699)` - *Octol1ttle*, 2026-08-16
 
 ---
 *Compiled directly from repository source tree.*

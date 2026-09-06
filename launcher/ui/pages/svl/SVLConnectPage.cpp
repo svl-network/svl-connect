@@ -391,6 +391,9 @@ void SVLConnectPage::onServersReceived()
                         model.modCount = obj.value("modCount").toInt(13);
                     }
                     model.isOnline = obj.contains("online") ? obj.value("online").toBool(false) : (statObj.contains("online") ? statObj.value("online").toBool(false) : false);
+                    if (!model.isOnline) {
+                        continue; // Do not display offline servers
+                    }
 
                     model.boosts = obj.value("boosts").toInt(0);
                     model.sponsored = obj.value("sponsored").toBool(false);
