@@ -246,6 +246,50 @@ void SVLConnectPage::setupUI()
     m_scrollArea->setWidget(scrollContainer);
     mainLayout->addWidget(m_scrollArea, 1);
 
+    // 4. Partner & Store Promotion Bar
+    auto* partnerFrame = new QFrame(centralContainer);
+    partnerFrame->setObjectName("partnerPromotionFrame");
+    partnerFrame->setStyleSheet("QFrame#partnerPromotionFrame { background-color: #14171E; border: 1px solid #232A36; border-radius: 8px; padding: 10px 14px; }");
+    auto* partnerLayout = new QHBoxLayout(partnerFrame);
+    partnerLayout->setContentsMargins(4, 2, 4, 2);
+    partnerLayout->setSpacing(12);
+
+    auto* partnerTextLayout = new QVBoxLayout();
+    partnerTextLayout->setSpacing(2);
+    auto* partnerTitle = new QLabel(tr("OFFICIAL PARTNER: BISECTHOSTING"), partnerFrame);
+    partnerTitle->setStyleSheet("color: #38BDF8; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; background: transparent;");
+    auto* partnerDesc = new QLabel(tr("Rent a high-speed Minecraft server with automated SVL-Bridge support. Save 25% with code SUNVEIL."), partnerFrame);
+    partnerDesc->setStyleSheet("color: #94A3B8; font-size: 11px; background: transparent;");
+    partnerTextLayout->addWidget(partnerTitle);
+    partnerTextLayout->addWidget(partnerDesc);
+    partnerLayout->addLayout(partnerTextLayout, 1);
+
+    auto* btnBisect = new QPushButton(tr("25% Off Hosting ↗"), partnerFrame);
+    btnBisect->setCursor(Qt::PointingHandCursor);
+    btnBisect->setStyleSheet("QPushButton { background-color: #0284C7; color: #FFFFFF; border: none; border-radius: 6px; padding: 6px 12px; font-size: 11px; font-weight: 700; } QPushButton:hover { background-color: #0369A1; }");
+    connect(btnBisect, &QPushButton::clicked, this, []() {
+        QDesktopServices::openUrl(QUrl("https://www.bisecthosting.com/clients/aff.php?aff=7448"));
+    });
+    partnerLayout->addWidget(btnBisect);
+
+    auto* btnStore = new QPushButton(tr("Store ↗"), partnerFrame);
+    btnStore->setCursor(Qt::PointingHandCursor);
+    btnStore->setStyleSheet("QPushButton { background-color: #10B981; color: #061B14; border: none; border-radius: 6px; padding: 6px 12px; font-size: 11px; font-weight: 700; } QPushButton:hover { background-color: #059669; }");
+    connect(btnStore, &QPushButton::clicked, this, []() {
+        QDesktopServices::openUrl(QUrl("https://sunveilsmp.tebex.io"));
+    });
+    partnerLayout->addWidget(btnStore);
+
+    auto* btnKofi = new QPushButton(tr("Tip Jar ↗"), partnerFrame);
+    btnKofi->setCursor(Qt::PointingHandCursor);
+    btnKofi->setStyleSheet("QPushButton { background-color: #242B35; color: #F43F5E; border: 1px solid #364152; border-radius: 6px; padding: 6px 12px; font-size: 11px; font-weight: 700; } QPushButton:hover { background-color: #2F3846; }");
+    connect(btnKofi, &QPushButton::clicked, this, []() {
+        QDesktopServices::openUrl(QUrl("https://ko-fi.com/X8X815R6AF"));
+    });
+    partnerLayout->addWidget(btnKofi);
+
+    mainLayout->addWidget(partnerFrame);
+
     outerLayout->addWidget(centralContainer, 10);
     outerLayout->addStretch(1);
 }
