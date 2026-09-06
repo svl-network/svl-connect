@@ -352,8 +352,19 @@ void SVLConnectPage::onServersReceived()
             for (const auto& val : array) {
                 if (val.isObject()) {
                     QJsonObject obj = val.toObject();
+                    QString key = obj.value("serverKey").toString();
+                    if (key.isEmpty() || 
+                        key == "svl_demo_realm" || 
+                        key == "svl_community_realm" || 
+                        key == "sunveil_crossplay" || 
+                        key.startsWith("demo_") || 
+                        key.startsWith("template_") ||
+                        key.contains("demo", Qt::CaseInsensitive)) {
+                        continue; // Strictly ignore all fake/template/mock servers
+                    }
+
                     SVLServerModel model;
-                    model.serverKey = obj.value("serverKey").toString();
+                    model.serverKey = key;
                     model.name = obj.value("name").toString(model.serverKey);
                     model.icon = obj.value("icon").toString(obj.value("logo").toString());
                     model.ip = obj.value("ip").toString("127.0.0.1");
