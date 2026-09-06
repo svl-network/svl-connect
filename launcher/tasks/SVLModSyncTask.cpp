@@ -34,6 +34,8 @@ SVLModSyncTask::SVLModSyncTask(const QString& masterApiBaseUrl,
                                const QString& serverName,
                                const QString& serverIp,
                                quint16 serverPort,
+                               const QString& mcVersion,
+                               const QString& loader,
                                QWidget* parentWidget)
     : Task(),
       m_masterApiBaseUrl(masterApiBaseUrl),
@@ -41,7 +43,9 @@ SVLModSyncTask::SVLModSyncTask(const QString& masterApiBaseUrl,
       m_serverName(serverName),
       m_serverIp(serverIp),
       m_serverPort(serverPort),
-      m_parentWidget(parentWidget)
+      m_parentWidget(parentWidget),
+      m_mcVersion(mcVersion.isEmpty() ? "1.21.1" : mcVersion),
+      m_loader(loader.isEmpty() ? "fabric" : loader)
 {
 }
 
@@ -69,6 +73,22 @@ bool SVLModSyncTask::abort()
 
 void SVLModSyncTask::executeTask()
 {
+    // Custom / Standalone servers directly prepare instance and connect without remote manifest
+    if (m_serverKey.startsWith("custom_") || m_serverKey.startsWith("standalone_")) {
+        setStatus(tr("Preparing standalone instance for %1...").arg(m_serverName));
+        setProgress(30, 100);
+
+        if (!prepareInstance(m_mcVersion.isEmpty() ? "1.21.1" : m_mcVersion, m_loader.isEmpty() ? "vanilla" : m_loader, "")) {
+            emitFailed(tr("Failed to prepare Minecraft instance for %1.").arg(m_serverName));
+            return;
+        }
+
+        setProgress(85, 100);
+        ensureServerInServersDat();
+        finalizeAndLaunch();
+        return;
+    }
+
     setStatus(tr("Connecting to Sunveil Master API..."));
     setProgress(0, 100);
 

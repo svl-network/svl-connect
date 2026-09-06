@@ -23,6 +23,14 @@
 #include <QPainterPath>
 #include <QPointer>
 #include <QIcon>
+#include <QDialog>
+#include <QSpinBox>
+#include <QComboBox>
+#include <QMessageBox>
+#include <QUuid>
+#include <QFile>
+#include <QDir>
+#include <QStandardPaths>
 #include "Application.h"
 #include "SVLSecurity.h"
 #include "tasks/SVLModSyncTask.h"
@@ -227,6 +235,13 @@ void SVLConnectPage::setupUI()
     });
     searchRow->addWidget(m_refreshBtn);
 
+    m_addServerBtn = new QPushButton(tr("➕ ADD SERVER"), centralContainer);
+    m_addServerBtn->setObjectName("addCustomServerButton");
+    m_addServerBtn->setCursor(Qt::PointingHandCursor);
+    m_addServerBtn->setStyleSheet("QPushButton { background-color: #00E599; color: #000000; border: none; border-radius: 8px; padding: 10px 18px; font-weight: 800; font-size: 12px; } QPushButton:hover { background-color: #10FFAC; } QPushButton:pressed { background-color: #00B377; }");
+    connect(m_addServerBtn, &QPushButton::clicked, this, &SVLConnectPage::openAddCustomServerDialog);
+    searchRow->addWidget(m_addServerBtn);
+
     mainLayout->addLayout(searchRow);
 
     // 3. Scroll Area for Server Cards
@@ -405,7 +420,226 @@ void SVLConnectPage::onServersReceived()
         m_allServers.append(defaultServer);
     }
 
+    // Load and prepend user's local custom standalone servers
+    loadCustomServers();
+    for (int i = m_customServers.size() - 1; i >= 0; --i) {
+        m_allServers.prepend(m_customServers[i]);
+    }
+
     onSearchFilterChanged(m_currentQuery);
+}
+
+void SVLConnectPage::loadCustomServers()
+{
+    m_customServers.clear();
+    QString dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir().mkpath(dataDir);
+    QString filePath = QDir(dataDir).filePath("custom_servers.json");
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return;
+    }
+
+    QByteArray data = file.readAll();
+    QJsonDocument doc = QJsonDocument::fromJson(data);
+    if (doc.isArray()) {
+        QJsonArray arr = doc.array();
+        for (const auto& val : arr) {
+            if (val.isObject()) {
+                QJsonObject obj = val.toObject();
+                SVLServerModel model;
+                model.serverKey = obj.value("serverKey").toString();
+                if (model.serverKey.isEmpty()) continue;
+                model.name = obj.value("name").toString("Custom Server");
+                model.ip = obj.value("ip").toString("127.0.0.1");
+                model.port = static_cast<quint16>(obj.value("port").toInt(25565));
+                model.mcVersion = obj.value("mcVersion").toString("1.21.1");
+                model.loader = obj.value("loader").toString("vanilla");
+                model.loaderVersion = obj.value("loaderVersion").toString();
+                model.motd = obj.value("motd").toString("Direct custom connection");
+                model.icon = obj.value("icon").toString();
+                model.verified = false;
+                model.isOnline = true;
+                model.isCustom = true;
+                model.isTunnel = false;
+                model.players = 0;
+                model.maxPlayers = 50;
+                model.modCount = 0;
+                m_customServers.append(model);
+            }
+        }
+    }
+}
+
+void SVLConnectPage::saveCustomServers()
+{
+    QString dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir().mkpath(dataDir);
+    QString filePath = QDir(dataDir).filePath("custom_servers.json");
+
+    QJsonArray arr;
+    for (const auto& srv : m_customServers) {
+        QJsonObject obj;
+        obj["serverKey"] = srv.serverKey;
+        obj["name"] = srv.name;
+        obj["ip"] = srv.ip;
+        obj["port"] = srv.port;
+        obj["mcVersion"] = srv.mcVersion;
+        obj["loader"] = srv.loader;
+        obj["loaderVersion"] = srv.loaderVersion;
+        obj["motd"] = srv.motd;
+        obj["icon"] = srv.icon;
+        arr.append(obj);
+    }
+
+    QFile file(filePath);
+    if (file.open(QIODevice::WriteOnly)) {
+        file.write(QJsonDocument(arr).toJson());
+    }
+}
+
+void SVLConnectPage::deleteCustomServer(const QString& serverKey)
+{
+    for (int i = 0; i < m_customServers.size(); ++i) {
+        if (m_customServers[i].serverKey == serverKey) {
+            m_customServers.removeAt(i);
+            break;
+        }
+    }
+    saveCustomServers();
+    refreshServers();
+}
+
+void SVLConnectPage::openAddCustomServerDialog()
+{
+    QDialog dialog(this);
+    dialog.setWindowTitle(tr("Add Custom Minecraft Server"));
+    dialog.setMinimumWidth(480);
+    dialog.setStyleSheet("QDialog { background-color: #18181B; color: #FFFFFF; } "
+                         "QLabel { color: #E4E4E7; font-size: 13px; font-weight: 600; } "
+                         "QLineEdit, QSpinBox, QComboBox { background-color: #27272A; border: 1px solid #3F3F46; border-radius: 6px; padding: 8px 12px; color: #FFFFFF; font-size: 13px; } "
+                         "QLineEdit:focus, QSpinBox:focus, QComboBox:focus { border: 1px solid #00E599; }");
+
+    auto* layout = new QVBoxLayout(&dialog);
+    layout->setContentsMargins(24, 24, 24, 24);
+    layout->setSpacing(16);
+
+    auto* headerTitle = new QLabel(tr("➕ Add Custom Server"), &dialog);
+    headerTitle->setStyleSheet("font-size: 18px; font-weight: 800; color: #FFFFFF;");
+    layout->addWidget(headerTitle);
+
+    auto* headerSub = new QLabel(tr("Add any vanilla, modded, or standalone Minecraft server directly to your launcher."), &dialog);
+    headerSub->setStyleSheet("font-size: 12px; color: #A1A1AA; font-weight: 400;");
+    headerSub->setWordWrap(true);
+    layout->addWidget(headerSub);
+
+    auto* formLayout = new QVBoxLayout();
+    formLayout->setSpacing(10);
+
+    auto* nameLabel = new QLabel(tr("Server Name *"), &dialog);
+    auto* nameEdit = new QLineEdit(&dialog);
+    nameEdit->setPlaceholderText(tr("e.g. Hypixel Network or Local Survival"));
+    formLayout->addWidget(nameLabel);
+    formLayout->addWidget(nameEdit);
+
+    auto* hostRow = new QHBoxLayout();
+    hostRow->setSpacing(12);
+
+    auto* ipCol = new QVBoxLayout();
+    auto* ipLabel = new QLabel(tr("Host / IP Address *"), &dialog);
+    auto* ipEdit = new QLineEdit(&dialog);
+    ipEdit->setPlaceholderText(tr("e.g. mc.hypixel.net or 127.0.0.1"));
+    ipCol->addWidget(ipLabel);
+    ipCol->addWidget(ipEdit);
+    hostRow->addLayout(ipCol, 3);
+
+    auto* portCol = new QVBoxLayout();
+    auto* portLabel = new QLabel(tr("Port"), &dialog);
+    auto* portSpin = new QSpinBox(&dialog);
+    portSpin->setRange(1, 65535);
+    portSpin->setValue(25565);
+    portCol->addWidget(portLabel);
+    portCol->addWidget(portSpin);
+    hostRow->addLayout(portCol, 1);
+
+    formLayout->addLayout(hostRow);
+
+    auto* versionRow = new QHBoxLayout();
+    versionRow->setSpacing(12);
+
+    auto* verCol = new QVBoxLayout();
+    auto* verLabel = new QLabel(tr("Minecraft Version"), &dialog);
+    auto* verCombo = new QComboBox(&dialog);
+    verCombo->setEditable(true);
+    verCombo->addItems({"1.21.1", "1.21", "1.20.6", "1.20.4", "1.20.1", "1.19.4", "1.18.2", "1.16.5", "1.12.2", "1.8.9"});
+    verCol->addWidget(verLabel);
+    verCol->addWidget(verCombo);
+    versionRow->addLayout(verCol, 1);
+
+    auto* loaderCol = new QVBoxLayout();
+    auto* loaderLabel = new QLabel(tr("Loader / Flavor"), &dialog);
+    auto* loaderCombo = new QComboBox(&dialog);
+    loaderCombo->addItems({"vanilla", "paper", "fabric", "forge", "neoforge"});
+    loaderCol->addWidget(loaderLabel);
+    loaderCol->addWidget(loaderCombo);
+    versionRow->addLayout(loaderCol, 1);
+
+    formLayout->addLayout(versionRow);
+
+    auto* motdLabel = new QLabel(tr("MOTD / Description (Optional)"), &dialog);
+    auto* motdEdit = new QLineEdit(&dialog);
+    motdEdit->setPlaceholderText(tr("Custom multiplayer server"));
+    formLayout->addWidget(motdLabel);
+    formLayout->addWidget(motdEdit);
+
+    layout->addLayout(formLayout);
+
+    auto* btnRow = new QHBoxLayout();
+    btnRow->setSpacing(12);
+
+    auto* cancelBtn = new QPushButton(tr("Cancel"), &dialog);
+    cancelBtn->setStyleSheet("QPushButton { background-color: #27272A; color: #FFFFFF; border: 1px solid #3F3F46; border-radius: 6px; padding: 10px 20px; font-weight: 600; font-size: 13px; } QPushButton:hover { background-color: #3F3F46; }");
+    connect(cancelBtn, &QPushButton::clicked, &dialog, &QDialog::reject);
+    btnRow->addWidget(cancelBtn);
+
+    auto* saveBtn = new QPushButton(tr("Add Server"), &dialog);
+    saveBtn->setStyleSheet("QPushButton { background-color: #00E599; color: #000000; border: none; border-radius: 6px; padding: 10px 24px; font-weight: 800; font-size: 13px; } QPushButton:hover { background-color: #10FFAC; }");
+    connect(saveBtn, &QPushButton::clicked, [&]() {
+        QString name = nameEdit->text().trimmed();
+        QString ip = ipEdit->text().trimmed();
+        if (name.isEmpty() || ip.isEmpty()) {
+            QMessageBox::warning(&dialog, tr("Missing Fields"), tr("Please enter both a server name and a server address."));
+            return;
+        }
+
+        SVLServerModel model;
+        model.serverKey = "custom_" + QUuid::createUuid().toString(QUuid::WithoutBraces).left(8);
+        model.name = name;
+        model.ip = ip;
+        model.port = static_cast<quint16>(portSpin->value());
+        model.mcVersion = verCombo->currentText().trimmed();
+        if (model.mcVersion.isEmpty()) model.mcVersion = "1.21.1";
+        model.loader = loaderCombo->currentText().trimmed().toLower();
+        model.motd = motdEdit->text().trimmed();
+        if (model.motd.isEmpty()) model.motd = tr("Direct custom standalone connection");
+        model.verified = false;
+        model.isOnline = true;
+        model.isCustom = true;
+        model.isTunnel = false;
+        model.players = 0;
+        model.maxPlayers = 50;
+        model.modCount = 0;
+
+        m_customServers.prepend(model);
+        saveCustomServers();
+        refreshServers();
+        dialog.accept();
+    });
+    btnRow->addWidget(saveBtn);
+
+    layout->addLayout(btnRow);
+    dialog.exec();
 }
 
 void SVLConnectPage::onSearchFilterChanged(const QString& query)
@@ -447,16 +681,34 @@ void SVLConnectPage::renderServerCards()
     }
 
     if (m_filteredServers.isEmpty()) {
-        auto* emptyLabel = new QLabel(tr("No active Sunveil realms online. Click 'Refresh' to check again."), this);
-        emptyLabel->setAlignment(Qt::AlignCenter);
-        emptyLabel->setStyleSheet("color: #71717A; font-size: 13px; padding: 40px;");
-        m_cardsLayout->addWidget(emptyLabel);
+        auto* emptyWidget = new QWidget();
+        auto* emptyLayout = new QVBoxLayout(emptyWidget);
+        emptyLayout->setContentsMargins(40, 60, 40, 60);
+        emptyLayout->setSpacing(12);
+        emptyLayout->setAlignment(Qt::AlignCenter);
+
+        auto* iconLabel = new QLabel(tr("🔍"), emptyWidget);
+        iconLabel->setAlignment(Qt::AlignCenter);
+        iconLabel->setStyleSheet("font-size: 48px; background: transparent;");
+        emptyLayout->addWidget(iconLabel);
+
+        auto* noMatchesLabel = new QLabel(tr("No realms matching \"%1\"").arg(m_currentQuery), emptyWidget);
+        noMatchesLabel->setAlignment(Qt::AlignCenter);
+        noMatchesLabel->setStyleSheet("color: #FFFFFF; font-size: 16px; font-weight: 700; background: transparent;");
+        emptyLayout->addWidget(noMatchesLabel);
+
+        auto* subTextLabel = new QLabel(tr("Check your search terms, add a custom server above, or refresh the directory."), emptyWidget);
+        subTextLabel->setAlignment(Qt::AlignCenter);
+        subTextLabel->setStyleSheet("color: #71717A; font-size: 13px; font-weight: 400; background: transparent;");
+        emptyLayout->addWidget(subTextLabel);
+
+        m_cardsLayout->addWidget(emptyWidget);
         m_cardsLayout->addStretch();
         return;
     }
 
-    for (int i = 0; i < m_filteredServers.size(); ++i) {
-        m_cardsLayout->addWidget(createServerCard(m_filteredServers[i]));
+    for (const auto& server : m_filteredServers) {
+        m_cardsLayout->addWidget(createServerCard(server));
     }
 
     m_cardsLayout->addStretch();
@@ -506,6 +758,13 @@ QWidget* SVLConnectPage::createServerCard(const SVLServerModel& server)
     nameLabel->setObjectName("serverTitle");
     nameLabel->setStyleSheet("color: #FFFFFF; font-size: 18px; font-weight: 700; background: transparent; border: none;");
     titleRow->addWidget(nameLabel);
+
+    if (server.isCustom) {
+        auto* customBadge = new QLabel(tr("🌐 CUSTOM SERVER"), card);
+        customBadge->setObjectName("badgeCustom");
+        customBadge->setStyleSheet("background-color: rgba(6, 182, 212, 0.15); color: #06B6D4; border: 1px solid rgba(6, 182, 212, 0.4); border-radius: 6px; padding: 2px 8px; font-size: 10px; font-weight: 800;");
+        titleRow->addWidget(customBadge);
+    }
 
     if (server.boosts > 0) {
         auto* boostedBadge = new QLabel(QString("🔥 BOOSTED (%1)").arg(server.boosts), card);
@@ -590,26 +849,36 @@ QWidget* SVLConnectPage::createServerCard(const SVLServerModel& server)
     playersLabel->setObjectName("playerCountBadge");
     playersLabel->setAlignment(Qt::AlignCenter);
     playersLabel->setStyleSheet("background-color: #111111; color: #00E599; border: 1px solid #2C2C2E; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700;");
-    playersLabel->setVisible(server.isOnline); // Hide player count if offline
+    playersLabel->setVisible(server.isOnline && !server.isCustom);
     rightLayout->addWidget(playersLabel, 0, Qt::AlignRight);
 
     auto* actionButtonsLayout = new QHBoxLayout();
     actionButtonsLayout->setSpacing(8);
 
-    auto* detailsBtn = new QPushButton(tr("Details"), card);
-    detailsBtn->setObjectName("cardDetailsBtn");
-    detailsBtn->setCursor(Qt::PointingHandCursor);
-    detailsBtn->setStyleSheet("QPushButton { background-color: #2C2C2E; color: #FFFFFF; border: 1px solid #2C2C2E; border-radius: 8px; padding: 8px 16px; font-weight: 600; font-size: 12px; min-height: 20px; } QPushButton:hover { background-color: #3F3F46; border-color: #52525B; } QPushButton:pressed { background-color: #1C1C1E; } QPushButton:disabled { background-color: #1C1C1E; color: #71717A; }");
-    connect(detailsBtn, &QPushButton::clicked, this, [this, server, detailsBtn]() {
-        detailsBtn->setEnabled(false);
-        emit serverDetailsRequested(server);
-        QTimer::singleShot(800, detailsBtn, [detailsBtn]() {
-            if (detailsBtn) {
-                detailsBtn->setEnabled(true);
-            }
+    if (server.isCustom) {
+        auto* removeBtn = new QPushButton(tr("Remove"), card);
+        removeBtn->setCursor(Qt::PointingHandCursor);
+        removeBtn->setStyleSheet("QPushButton { background-color: #27272A; color: #F87171; border: 1px solid #3F3F46; border-radius: 8px; padding: 8px 14px; font-weight: 600; font-size: 12px; min-height: 20px; } QPushButton:hover { background-color: rgba(239, 68, 68, 0.2); border-color: #EF4444; }");
+        connect(removeBtn, &QPushButton::clicked, this, [this, serverKey = server.serverKey]() {
+            deleteCustomServer(serverKey);
         });
-    });
-    actionButtonsLayout->addWidget(detailsBtn);
+        actionButtonsLayout->addWidget(removeBtn);
+    } else {
+        auto* detailsBtn = new QPushButton(tr("Details"), card);
+        detailsBtn->setObjectName("cardDetailsBtn");
+        detailsBtn->setCursor(Qt::PointingHandCursor);
+        detailsBtn->setStyleSheet("QPushButton { background-color: #2C2C2E; color: #FFFFFF; border: 1px solid #2C2C2E; border-radius: 8px; padding: 8px 16px; font-weight: 600; font-size: 12px; min-height: 20px; } QPushButton:hover { background-color: #3F3F46; border-color: #52525B; } QPushButton:pressed { background-color: #1C1C1E; } QPushButton:disabled { background-color: #1C1C1E; color: #71717A; }");
+        connect(detailsBtn, &QPushButton::clicked, this, [this, server, detailsBtn]() {
+            detailsBtn->setEnabled(false);
+            emit serverDetailsRequested(server);
+            QTimer::singleShot(800, detailsBtn, [detailsBtn]() {
+                if (detailsBtn) {
+                    detailsBtn->setEnabled(true);
+                }
+            });
+        });
+        actionButtonsLayout->addWidget(detailsBtn);
+    }
 
     auto* connectBtn = new QPushButton(card);
     connectBtn->setObjectName("btnConnect");
@@ -648,7 +917,7 @@ void SVLConnectPage::launchServer(const SVLServerModel& server)
 
 void SVLConnectPage::onConnectClicked(const SVLServerModel& server)
 {
-    auto* syncTask = new SVLModSyncTask(m_masterApiBaseUrl, server.serverKey, server.name, server.ip, server.port, this);
+    auto* syncTask = new SVLModSyncTask(m_masterApiBaseUrl, server.serverKey, server.name, server.ip, server.port, server.mcVersion, server.loader, this);
 
     auto* overlay = new SVLLoadingOverlay(this->window());
     overlay->setPrimaryStatus(tr("CONNECTING TO %1").arg(server.name.toUpper()));

@@ -38,6 +38,7 @@ struct SVLServerModel {
     int modCount = 13;
     bool isOnline = true;
     bool isTunnel = false;
+    bool isCustom = false;
     int boosts = 0;
     bool sponsored = false;
     QString bannerUrl;
@@ -57,6 +58,9 @@ public:
     static QPixmap createRoundedIcon(const QPixmap& src, int width = 64, int height = 64, int radius = 8);
     static QPixmap loadServerIcon(const QString& iconData, int width = 64, int height = 64, int radius = 8);
 
+    void openAddCustomServerDialog();
+    void deleteCustomServer(const QString& serverKey);
+
 signals:
     void launchRequested(MinecraftInstance* instance, const QString& ip, quint16 port);
     void serverDetailsRequested(const SVLServerModel& server);
@@ -71,15 +75,19 @@ private:
     void renderServerCards();
     QWidget* createServerCard(const SVLServerModel& server);
     void bindServerIcon(const QString& iconData, QLabel* label, int size = 56);
+    void loadCustomServers();
+    void saveCustomServers();
 
     QString m_masterApiBaseUrl = "https://realms.sunveil.net";
     QList<SVLServerModel> m_allServers;
+    QList<SVLServerModel> m_customServers;
     QList<SVLServerModel> m_filteredServers;
     QString m_currentQuery;
     QHash<QString, QPixmap> m_iconCache;
 
     QLineEdit* m_searchEdit = nullptr;
     QPushButton* m_refreshBtn = nullptr;
+    QPushButton* m_addServerBtn = nullptr;
     QLabel* m_statusLabel = nullptr;
     QVBoxLayout* m_cardsLayout = nullptr;
     QScrollArea* m_scrollArea = nullptr;

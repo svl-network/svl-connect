@@ -24,6 +24,8 @@ public:
                             const QString& serverName,
                             const QString& serverIp,
                             quint16 serverPort,
+                            const QString& mcVersion = "1.21.1",
+                            const QString& loader = "fabric",
                             QWidget* parentWidget = nullptr);
     ~SVLModSyncTask() override;
 
