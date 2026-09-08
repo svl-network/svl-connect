@@ -4,8 +4,9 @@ $ErrorActionPreference = "Stop"
 $workspace = "C:\svl-network\svl-connect"
 $buildDir = "$workspace\build"
 $distBase = "$workspace\dist"
-$distFolder = "$distBase\SVL-Connect-v1.0.2-Windows-x64"
-$zipPath = "$distBase\SVL-Connect-v1.0.2-Windows-x64-Portable.zip"
+$version = "v1.0.4"
+$distFolder = "$distBase\SVL-Connect-$version-Windows-x64"
+$zipPath = "$distBase\SVL-Connect-$version-Windows-x64-Portable.zip"
 
 Write-Host "Creating output directory: $distFolder..."
 if (Test-Path $distFolder) {
@@ -59,3 +60,10 @@ Compress-Archive -Path "$distFolder\*" -DestinationPath "$zipPath" -CompressionL
 $zipItem = Get-Item $zipPath
 Write-Host "Package completed successfully!"
 Write-Host "Output ZIP: $($zipItem.FullName) ($([math]::Round($zipItem.Length / 1MB, 2)) MB)"
+
+$downloadsDir = "C:\svl-network\svl-master-api\public\downloads"
+if (Test-Path $downloadsDir) {
+    Copy-Item $zipPath "$downloadsDir\SVL-Connect-$version-Windows-x64-Portable.zip" -Force
+    Copy-Item $zipPath "$downloadsDir\svl-connect-windows-x64.zip" -Force
+    Write-Host "Copied release ZIP to master API downloads portal!"
+}
