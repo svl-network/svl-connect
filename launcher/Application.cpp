@@ -102,10 +102,6 @@
 #include <QStyleFactory>
 #include <QTranslator>
 #include <QWindow>
-#ifdef Q_OS_WIN
-#include <windows.h>
-#endif
-
 #include "InstanceList.h"
 #include "MTPixmapCache.h"
 
@@ -158,6 +154,9 @@
 #if defined Q_OS_WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
 #endif
 #include <windows.h>
 #include <QStyleHints>

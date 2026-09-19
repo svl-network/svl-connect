@@ -2,6 +2,12 @@
 
 ### Live Commit History (main branch)
 
+* **feat(launcher): add Inbuilt Client Mods suite, server policy display, crash console focus, and instance deduplication** `(57864d1e1)` - *HeyTaxx*, 2026-09-19
+* **chore(release): package and release v1.0.5 with auto-update integration** `(4f18ee43f)` - *HeyTaxx*, 2026-09-08
+* **feat: implement SVLConnectPage for server browsing and add project changelog** `(820a5b4cc)` - *HeyTaxx*, 2026-09-08
+* **chore(release): bump release package script to v1.0.4** `(4e09b25d3)` - *HeyTaxx*, 2026-09-08
+* **chore(build): add Windows x64 automated release packaging script** `(06bb3057c)` - *HeyTaxx*, 2026-09-08
+* **fix(realms): filter out offline template servers from UI listing** `(89ff15a27)` - *HeyTaxx*, 2026-09-06
 * **fix(realms): strictly filter out all demo and template server keys from remote API responses** `(8e45d2746)` - *HeyTaxx*, 2026-09-06
 * **fix(realms): remove hardcoded fallback defaultServer and enhance clean empty state** `(87ec09ac5)` - *HeyTaxx*, 2026-09-06
 * **fix(branding): replace legacy Prism Launcher ICO and 256px icons with custom Sunveil assets and update repository metadata** `(b55d83b92)` - *HeyTaxx*, 2026-09-06
@@ -26,12 +32,6 @@
 * **feat: implement server mod synchronization, update management, and SVL connection UI page** `(08c8cfc3d)` - *HeyTaxx*, 2026-08-18
 * **chore: remove unused configuration file** `(861d375f8)` - *HeyTaxx*, 2026-08-18
 * **chore: remove deprecated legacy utility module** `(5d362e3f2)` - *HeyTaxx*, 2026-08-18
-* **feat: implement update management system and add infrastructure for custom launcher branding and localization** `(f71692534)` - *HeyTaxx*, 2026-08-18
-* **feat: introduce SVLConnectPage and SVLLoadingOverlay for integrated server management and connection tasks** `(1d9150d36)` - *HeyTaxx*, 2026-08-17
-* **feat: initialize codebase by importing Prism Launcher core modules and UI framework** `(257832846)` - *HeyTaxx*, 2026-08-17
-* **feat: initialize SVL Connect launcher application infrastructure and project structure** `(13d4aa715)` - *HeyTaxx*, 2026-08-17
-* **feat: implement Sunveil Connect server-browser, fivem-style mod sync and quarantine dialog** `(8302c24f2)` - *HeyTaxx*, 2026-08-17
-* **fix: set entity state before emitting success (#5949)** `(6aa2c3d7e)` - *Alexandru Ionut Tripon*, 2026-08-17
 
 ---
 *Compiled directly from repository source tree.*

@@ -1,4 +1,5 @@
 #include "SVLClientModsPage.h"
+#include "settings/SettingsObject.h"
 
 #include <QScrollArea>
 #include <QStyle>
