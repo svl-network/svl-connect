@@ -256,7 +256,27 @@ void SVLRealmDetailPage::setupUI()
     infoCardLayout->addLayout(grid);
     rightLayout->addWidget(infoCard);
 
-    // 2. Rich Markdown Description Card
+    // 2. Server Mod Policy & Restrictions Card
+    auto* policyCard = new QFrame(rightContainer);
+    policyCard->setObjectName("rightCardFrame");
+    policyCard->setAttribute(Qt::WA_StyledBackground, true);
+    auto* policyCardLayout = new QVBoxLayout(policyCard);
+    policyCardLayout->setContentsMargins(18, 16, 18, 16);
+    policyCardLayout->setSpacing(8);
+
+    m_policyHeaderLabel = new QLabel(tr("SERVER MOD POLICY & RESTRICTIONS"), policyCard);
+    m_policyHeaderLabel->setStyleSheet("color: #00E599; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; border: none;");
+    policyCardLayout->addWidget(m_policyHeaderLabel);
+
+    m_policyContainer = new QWidget(policyCard);
+    m_policyLayout = new QVBoxLayout(m_policyContainer);
+    m_policyLayout->setContentsMargins(0, 0, 0, 0);
+    m_policyLayout->setSpacing(6);
+    policyCardLayout->addWidget(m_policyContainer);
+
+    rightLayout->addWidget(policyCard);
+
+    // 3. Rich Markdown Description Card
     auto* aboutCard = new QFrame(rightContainer);
     aboutCard->setObjectName("rightCardFrame");
     aboutCard->setAttribute(Qt::WA_StyledBackground, true);
@@ -407,6 +427,52 @@ void SVLRealmDetailPage::updateUI()
     m_versionValLabel->setText(QString("Minecraft %1").arg(m_server.mcVersion));
     m_loaderValLabel->setText(QString("%1 %2").arg(m_server.loader.toUpper(), m_server.loaderVersion.isEmpty() ? "52.0.18" : m_server.loaderVersion));
     m_statusValLabel->setText(m_server.verified ? tr("Verified Official") : tr("Community Hosted"));
+
+    // Clear and rebuild server mod policy items
+    if (m_policyLayout) {
+        QLayoutItem* pItem;
+        while ((pItem = m_policyLayout->takeAt(0)) != nullptr) {
+            if (pItem->widget()) pItem->widget()->deleteLater();
+            delete pItem;
+        }
+
+        if (m_server.disallowedClientMods.isEmpty()) {
+            auto* allowRow = new QHBoxLayout();
+            allowRow->setSpacing(8);
+
+            auto* okBadge = new QLabel(tr("✓ ALL CLIENT MODS PERMITTED"), m_policyContainer);
+            okBadge->setStyleSheet("background-color: rgba(0, 229, 153, 0.12); color: #00E599; border: 1px solid rgba(0, 229, 153, 0.35); border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700;");
+            allowRow->addWidget(okBadge);
+
+            auto* okDesc = new QLabel(tr("Alt Look, Freecam, Minimap & Waypoints, Item Physics and FOV Changer are fully authorized."), m_policyContainer);
+            okDesc->setStyleSheet("color: #A1A1AA; font-size: 12px; border: none; background: transparent;");
+            allowRow->addWidget(okDesc);
+            allowRow->addStretch();
+
+            m_policyLayout->addLayout(allowRow);
+        } else {
+            auto* warnDesc = new QLabel(tr("⚠️ The server administration has restricted certain client modifications:"), m_policyContainer);
+            warnDesc->setStyleSheet("color: #F87171; font-size: 12px; font-weight: 600; border: none; background: transparent;");
+            m_policyLayout->addWidget(warnDesc);
+
+            auto* badgesRow = new QHBoxLayout();
+            badgesRow->setSpacing(8);
+            for (const QString& dMod : m_server.disallowedClientMods) {
+                QString displayName = dMod.toUpper();
+                if (dMod == "freecam") displayName = "FREECAM";
+                else if (dMod == "alt-look" || dMod == "altlook" || dMod == "perspective") displayName = "ALT LOOK / PERSPECTIVE";
+                else if (dMod == "minimap") displayName = "MINIMAP";
+                else if (dMod == "xray") displayName = "X-RAY";
+                else if (dMod == "baritone") displayName = "BARITONE / AUTOMATION";
+
+                auto* badBadge = new QLabel(QString("🚫 %1 (FORBIDDEN)").arg(displayName), m_policyContainer);
+                badBadge->setStyleSheet("background-color: rgba(239, 68, 68, 0.15); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 800;");
+                badgesRow->addWidget(badBadge);
+            }
+            badgesRow->addStretch();
+            m_policyLayout->addLayout(badgesRow);
+        }
+    }
 
     QString descText = m_server.motd.isEmpty() ? tr("Welcome to %1! Automatic mod synchronization is active for this server.").arg(m_server.name) : m_server.motd;
     m_descBrowser->setMarkdown(descText);

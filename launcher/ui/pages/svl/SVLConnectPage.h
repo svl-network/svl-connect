@@ -43,6 +43,7 @@ struct SVLServerModel {
     bool sponsored = false;
     QString bannerUrl;
     SVLServerLinks links;
+    QStringList disallowedClientMods;
 };
 
 class SVLConnectPage : public QWidget {

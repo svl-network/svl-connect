@@ -62,6 +62,9 @@ private:
     QLabel* m_loaderValLabel = nullptr;
     QLabel* m_statusValLabel = nullptr;
     QTextBrowser* m_descBrowser = nullptr;
+    QWidget* m_policyContainer = nullptr;
+    QVBoxLayout* m_policyLayout = nullptr;
+    QLabel* m_policyHeaderLabel = nullptr;
     QWidget* m_modsContainer = nullptr;
     QVBoxLayout* m_modsLayout = nullptr;
     QLabel* m_modsHeaderLabel = nullptr;

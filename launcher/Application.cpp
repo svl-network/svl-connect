@@ -66,6 +66,7 @@
 #include "ui/pages/global/LauncherPage.h"
 #include "ui/pages/global/MinecraftPage.h"
 #include "ui/pages/global/ProxyPage.h"
+#include "ui/pages/global/SVLClientModsPage.h"
 
 #include "ui/setupwizard/AutoJavaWizardPage.h"
 #include "ui/setupwizard/JavaWizardPage.h"
@@ -101,6 +102,9 @@
 #include <QStyleFactory>
 #include <QTranslator>
 #include <QWindow>
+#ifdef Q_OS_WIN
+#include <windows.h>
+#endif
 
 #include "InstanceList.h"
 #include "MTPixmapCache.h"
@@ -904,12 +908,21 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
         // Custom Technic Client ID
         m_settings->registerSetting("TechnicClientID", "");
 
+        // Sunveil Inbuilt Client Mods Suite
+        m_settings->registerSetting("ClientMod_AltLook", true);
+        m_settings->registerSetting("ClientMod_Freecam", false);
+        m_settings->registerSetting("ClientMod_Minimap", true);
+        m_settings->registerSetting("ClientMod_ItemPhysics", true);
+        m_settings->registerSetting("ClientMod_FovZoom", true);
+        m_settings->registerSetting("ClientMod_Performance", true);
+
         // Init page provider
         {
             m_globalSettingsProvider = std::make_unique<GenericPageProvider>(tr("Settings"));
             m_globalSettingsProvider->addPage<LauncherPage>();
             m_globalSettingsProvider->addPage<LanguagePage>();
             m_globalSettingsProvider->addPage<AppearancePage>();
+            m_globalSettingsProvider->addPage<SVLClientModsPage>();
             m_globalSettingsProvider->addPage<MinecraftPage>();
             m_globalSettingsProvider->addPage<JavaPage>();
             m_globalSettingsProvider->addPage<AccountListPage>();
@@ -1750,13 +1763,22 @@ InstanceWindow* Application::showInstanceWindow(MinecraftInstance* instance, QSt
             window->showNormal();
         }
 #endif
-
+        window->show();
         window->raise();
         window->activateWindow();
+#ifdef Q_OS_WIN
+        SetForegroundWindow((HWND)window->winId());
+#endif
     } else {
         window = new InstanceWindow(instance);
         m_openWindows++;
         connect(window, &InstanceWindow::isClosing, this, &Application::on_windowClose);
+        window->show();
+        window->raise();
+        window->activateWindow();
+#ifdef Q_OS_WIN
+        SetForegroundWindow((HWND)window->winId());
+#endif
     }
 
     if (!page.isEmpty()) {

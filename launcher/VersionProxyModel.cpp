@@ -352,6 +352,7 @@ QModelIndex VersionProxyModel::getRecommended() const
         auto value = sourceModel()->data(mapToSource(index(i, 0)), BaseVersionList::RecommendedRole);
         if (value.toBool()) {
             recommended = i;
+            break;
         }
     }
     return index(recommended, 0);

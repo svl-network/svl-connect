@@ -408,6 +408,15 @@ void SVLConnectPage::onServersReceived()
                     model.links.discord = linksObj.value("discord").toString();
                     model.links.website = linksObj.value("website").toString();
 
+                    if (obj.contains("disallowedClientMods") && obj.value("disallowedClientMods").isArray()) {
+                        for (const auto& item : obj.value("disallowedClientMods").toArray()) {
+                            QString dMod = item.toString().trimmed().toLower();
+                            if (!dMod.isEmpty()) {
+                                model.disallowedClientMods.append(dMod);
+                            }
+                        }
+                    }
+
                     m_allServers.append(model);
                 }
             }
@@ -607,8 +616,16 @@ void SVLConnectPage::openAddCustomServerDialog()
             return;
         }
 
+        // Generate deterministic sanitized serverKey based on IP and port
+        QString cleanHost = ip.toLower();
+        cleanHost.replace(QRegularExpression("[^a-z0-9_]"), "_");
+        while (cleanHost.contains("__")) cleanHost.replace("__", "_");
+        cleanHost.remove(QRegularExpression("^_+|_+$"));
+        if (cleanHost.isEmpty()) cleanHost = "server";
+        QString deterministicKey = QString("srv_%1_%2").arg(cleanHost).arg(portSpin->value());
+
         SVLServerModel model;
-        model.serverKey = "custom_" + QUuid::createUuid().toString(QUuid::WithoutBraces).left(8);
+        model.serverKey = deterministicKey;
         model.name = name;
         model.ip = ip;
         model.port = static_cast<quint16>(portSpin->value());
@@ -625,7 +642,17 @@ void SVLConnectPage::openAddCustomServerDialog()
         model.maxPlayers = 50;
         model.modCount = 0;
 
-        m_customServers.prepend(model);
+        bool found = false;
+        for (auto& existing : m_customServers) {
+            if (existing.serverKey == model.serverKey || (existing.ip.compare(model.ip, Qt::CaseInsensitive) == 0 && existing.port == model.port)) {
+                existing = model;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            m_customServers.prepend(model);
+        }
         saveCustomServers();
         refreshServers();
         dialog.accept();

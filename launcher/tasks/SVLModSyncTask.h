@@ -63,6 +63,7 @@ private:
     QString m_loaderVersion = "0.16.9";
     bool m_verified = true;
     QList<SVLModEntry> m_manifestMods;
+    QStringList m_disallowedClientMods;
 
     // Sync state
     QString m_modsDirPath;

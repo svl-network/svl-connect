@@ -1038,6 +1038,8 @@ SET(LAUNCHER_SOURCES
 
     # GUI - Sunveil Connect pages
     SVLSecurity.h
+    ui/pages/global/SVLClientModsPage.cpp
+    ui/pages/global/SVLClientModsPage.h
     ui/pages/svl/SVLConnectPage.cpp
     ui/pages/svl/SVLConnectPage.h
     ui/pages/svl/SVLRealmDetailPage.cpp

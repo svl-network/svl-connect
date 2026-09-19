@@ -180,6 +180,15 @@ void SVLModSyncTask::processManifest(const QByteArray& data)
         m_manifestMods.append(entry);
     }
 
+    m_disallowedClientMods.clear();
+    QJsonArray disallowedArray = obj.value("disallowedClientMods").toArray();
+    for (const QJsonValue& val : disallowedArray) {
+        QString modName = val.toString().trimmed().toLower();
+        if (!modName.isEmpty()) {
+            m_disallowedClientMods.append(modName);
+        }
+    }
+
     // Auto-ensure Fabric API if loader is Fabric with mods
     if (m_loader == "fabric" && !m_manifestMods.isEmpty()) {
         bool hasFabricApi = false;
@@ -198,6 +207,105 @@ void SVLModSyncTask::processManifest(const QByteArray& data)
             fabricApi.targetFolder = "mods";
             fabricApi.downloadUrl = QString("https://cdn.modrinth.com/data/P7dR8mAc/versions/0.102.0+%1/fabric-api-0.102.0+%1.jar").arg(m_mcVersion);
             m_manifestMods.prepend(fabricApi);
+        }
+    }
+
+    // Inbuilt Client Mods Provisioning (Respecting Server Policy)
+    bool isClientLoaderSupported = (m_loader == "fabric" || m_loader == "forge" || m_loader == "neoforge");
+    if (isClientLoaderSupported && APPLICATION->settings()) {
+        auto isModBanned = [this](const QString& keyword) -> bool {
+            for (const QString& d : m_disallowedClientMods) {
+                if (d.contains(keyword, Qt::CaseInsensitive) || keyword.contains(d, Qt::CaseInsensitive)) return true;
+            }
+            return false;
+        };
+
+        // 1. Alt Look / Free Look
+        if (APPLICATION->settings()->get("ClientMod_AltLook").toBool()) {
+            if (!isModBanned("alt-look") && !isModBanned("altlook") && !isModBanned("perspective")) {
+                SVLModEntry altLook;
+                altLook.projectId = "freelook";
+                altLook.fileName = QString("freelook-%1.jar").arg(m_mcVersion);
+                altLook.downloadUrl = QString("https://cdn.modrinth.com/data/bW5zE7t0/versions/freelook-%1.jar").arg(m_mcVersion);
+                altLook.tier = "official";
+                altLook.targetFolder = "mods";
+                m_manifestMods.append(altLook);
+            } else {
+                qDebug() << "[SVLModSync] Server forbids 'Alt Look' -> Inbuilt mod disabled for this session.";
+            }
+        }
+
+        // 2. Freecam
+        if (APPLICATION->settings()->get("ClientMod_Freecam").toBool()) {
+            if (!isModBanned("freecam")) {
+                SVLModEntry freecam;
+                freecam.projectId = "freecam";
+                freecam.fileName = QString("freecam-%1.jar").arg(m_mcVersion);
+                freecam.downloadUrl = QString("https://cdn.modrinth.com/data/dT9L467n/versions/freecam-%1.jar").arg(m_mcVersion);
+                freecam.tier = "official";
+                freecam.targetFolder = "mods";
+                m_manifestMods.append(freecam);
+            } else {
+                qDebug() << "[SVLModSync] Server forbids 'Freecam' -> Inbuilt mod disabled for this session.";
+            }
+        }
+
+        // 3. Minimap & Waypoints
+        if (APPLICATION->settings()->get("ClientMod_Minimap").toBool()) {
+            if (!isModBanned("minimap")) {
+                SVLModEntry minimap;
+                minimap.projectId = "xaeros-minimap";
+                minimap.fileName = QString("xaeros-minimap-%1.jar").arg(m_mcVersion);
+                minimap.downloadUrl = QString("https://cdn.modrinth.com/data/1bokaNcj/versions/xaeros-minimap-%1.jar").arg(m_mcVersion);
+                minimap.tier = "official";
+                minimap.targetFolder = "mods";
+                m_manifestMods.append(minimap);
+            } else {
+                qDebug() << "[SVLModSync] Server forbids 'Minimap' -> Inbuilt mod disabled for this session.";
+            }
+        }
+
+        // 4. Item Physics
+        if (APPLICATION->settings()->get("ClientMod_ItemPhysics").toBool()) {
+            if (!isModBanned("itemphysics") && !isModBanned("item_physics")) {
+                SVLModEntry itemPhys;
+                itemPhys.projectId = "itemphysic";
+                itemPhys.fileName = QString("itemphysic-%1.jar").arg(m_mcVersion);
+                itemPhys.downloadUrl = QString("https://cdn.modrinth.com/data/K0v0Zsmk/versions/itemphysic-%1.jar").arg(m_mcVersion);
+                itemPhys.tier = "official";
+                itemPhys.targetFolder = "mods";
+                m_manifestMods.append(itemPhys);
+            } else {
+                qDebug() << "[SVLModSync] Server forbids 'Item Physics' -> Inbuilt mod disabled for this session.";
+            }
+        }
+
+        // 5. FOV / Zoom Changer
+        if (APPLICATION->settings()->get("ClientMod_FovZoom").toBool()) {
+            if (!isModBanned("zoom") && !isModBanned("fov")) {
+                SVLModEntry zoom;
+                zoom.projectId = "zoomify";
+                zoom.fileName = QString("zoomify-%1.jar").arg(m_mcVersion);
+                zoom.downloadUrl = QString("https://cdn.modrinth.com/data/w7ThoJFB/versions/zoomify-%1.jar").arg(m_mcVersion);
+                zoom.tier = "official";
+                zoom.targetFolder = "mods";
+                m_manifestMods.append(zoom);
+            } else {
+                qDebug() << "[SVLModSync] Server forbids 'Zoom/FOV Changer' -> Inbuilt mod disabled for this session.";
+            }
+        }
+
+        // 6. Performance Suite (Sodium / Iris / Embeddium)
+        if (APPLICATION->settings()->get("ClientMod_Performance").toBool()) {
+            if (!isModBanned("sodium") && !isModBanned("performance")) {
+                SVLModEntry perf;
+                perf.projectId = (m_loader == "fabric") ? "sodium" : "embeddium";
+                perf.fileName = QString("%1-%2.jar").arg(perf.projectId, m_mcVersion);
+                perf.downloadUrl = QString("https://cdn.modrinth.com/data/AANobbMI/versions/%1-%2.jar").arg(perf.projectId, m_mcVersion);
+                perf.tier = "official";
+                perf.targetFolder = "mods";
+                m_manifestMods.append(perf);
+            }
         }
     }
 
@@ -241,8 +349,36 @@ bool SVLModSyncTask::prepareInstance(const QString& mcVersion, const QString& lo
     if (baseDir.isEmpty()) {
         baseDir = FS::PathCombine(APPLICATION->dataRoot(), "instances");
     }
+
+    // Sanitize folder name cleanly
+    QString cleanKey = m_serverKey;
+    cleanKey.replace(QRegularExpression("[^a-zA-Z0-9_-]"), "_");
+    while (cleanKey.contains("__")) cleanKey.replace("__", "_");
+    cleanKey.remove(QRegularExpression("^_+|_+$"));
+    if (cleanKey.isEmpty()) cleanKey = "svl_instance";
+
+    // 1. Try finding existing instance by serverKey ID
     m_instance = APPLICATION->instances()->getInstanceById(m_serverKey);
-    QString instanceDir = m_instance ? m_instance->instanceRoot() : FS::PathCombine(baseDir, m_serverKey);
+    // 2. Try finding by clean sanitized folder ID
+    if (!m_instance) {
+        m_instance = APPLICATION->instances()->getInstanceById(cleanKey);
+    }
+    // 3. Try finding by ManagedName (which stores serverKey)
+    if (!m_instance) {
+        m_instance = APPLICATION->instances()->getInstanceByManagedName(m_serverKey);
+    }
+    // 4. Try finding by matching display name
+    if (!m_instance) {
+        for (int i = 0; i < APPLICATION->instances()->count(); ++i) {
+            auto* candidate = APPLICATION->instances()->at(i);
+            if (candidate && candidate->name().compare(m_serverName, Qt::CaseInsensitive) == 0) {
+                m_instance = candidate;
+                break;
+            }
+        }
+    }
+
+    QString instanceDir = m_instance ? m_instance->instanceRoot() : FS::PathCombine(baseDir, cleanKey);
     FS::ensureFolderPathExists(instanceDir);
 
     // 1. instance.cfg
@@ -265,9 +401,17 @@ bool SVLModSyncTask::prepareInstance(const QString& mcVersion, const QString& lo
         QFile cfgFile(cfgPath);
         if (cfgFile.open(QIODevice::ReadWrite | QIODevice::Text)) {
             QString content = QString::fromUtf8(cfgFile.readAll());
+            bool modified = false;
             if (!content.contains("IgnoreJavaCompatibility=true")) {
                 if (!content.endsWith("\n")) content += "\n";
                 content += "OverrideJava=true\nIgnoreJavaCompatibility=true\n";
+                modified = true;
+            }
+            if (!content.contains("ManagedName=")) {
+                content += QString("ManagedName=%1\n").arg(m_serverKey);
+                modified = true;
+            }
+            if (modified) {
                 cfgFile.resize(0);
                 cfgFile.write(content.toUtf8());
             }
@@ -297,16 +441,31 @@ bool SVLModSyncTask::prepareInstance(const QString& mcVersion, const QString& lo
     if (loader == "fabric") {
         targetLoaderUid = "net.fabricmc.fabric-loader";
         targetLoaderName = "Fabric Loader";
-        if (targetLoaderVersion.isEmpty()) targetLoaderVersion = "0.16.9";
+        if (targetLoaderVersion.isEmpty()) targetLoaderVersion = "0.16.10";
     } else if (loader == "neoforge") {
         targetLoaderUid = "net.neoforged";
         targetLoaderName = "NeoForge";
-        if (targetLoaderVersion.isEmpty()) targetLoaderVersion = "21.1.70";
+        if (targetLoaderVersion.isEmpty()) {
+            if (mcVersion.startsWith("1.21.1")) targetLoaderVersion = "21.1.70";
+            else if (mcVersion.startsWith("1.21")) targetLoaderVersion = "21.0.167";
+            else if (mcVersion.startsWith("1.20.6")) targetLoaderVersion = "20.6.119";
+            else if (mcVersion.startsWith("1.20.4")) targetLoaderVersion = "20.4.237";
+            else if (mcVersion.startsWith("1.20.2")) targetLoaderVersion = "20.2.88";
+            else if (mcVersion.startsWith("1.20.1")) targetLoaderVersion = "20.1.100";
+            else targetLoaderVersion = "21.1.70";
+        }
     } else if (loader == "forge") {
         targetLoaderUid = "net.minecraftforge";
         targetLoaderName = "Forge";
         if (targetLoaderVersion.isEmpty()) {
-            targetLoaderVersion = mcVersion.startsWith("1.21.1") ? "61.2.1" : "52.1.16";
+            if (mcVersion.startsWith("1.21.1")) targetLoaderVersion = "52.1.16";
+            else if (mcVersion.startsWith("1.20.4")) targetLoaderVersion = "49.0.38";
+            else if (mcVersion.startsWith("1.20.1")) targetLoaderVersion = "47.2.20";
+            else if (mcVersion.startsWith("1.19.4")) targetLoaderVersion = "45.1.0";
+            else if (mcVersion.startsWith("1.18.2")) targetLoaderVersion = "40.2.14";
+            else if (mcVersion.startsWith("1.16.5")) targetLoaderVersion = "36.2.39";
+            else if (mcVersion.startsWith("1.12.2")) targetLoaderVersion = "14.23.5.2860";
+            else targetLoaderVersion = "52.1.16";
         }
     }
 
@@ -421,6 +580,25 @@ void SVLModSyncTask::performCleanSyncAndDownload()
 
         for (const QString& localFile : localFiles) {
             QString fullPath = dir.absoluteFilePath(localFile);
+
+            // Server-side Mod Policy enforcement: check if mod is explicitly disallowed by the server
+            if (folderName == "mods" && !m_disallowedClientMods.isEmpty()) {
+                bool isDisallowed = false;
+                QString lowerName = localFile.toLower();
+                for (const QString& disallowed : m_disallowedClientMods) {
+                    if (lowerName.contains(disallowed)) {
+                        isDisallowed = true;
+                        break;
+                    }
+                }
+                if (isDisallowed) {
+                    qDebug() << "[SVLModSync] Disabling forbidden client-side mod per server policy:" << localFile;
+                    setStatus(tr("Disabling forbidden client mod '%1' per server policy...").arg(localFile));
+                    QFile::rename(fullPath, fullPath + ".disabled");
+                    continue;
+                }
+            }
+
             QFile file(fullPath);
             if (file.open(QIODevice::ReadOnly)) {
                 QString hash = QCryptographicHash::hash(file.readAll(), QCryptographicHash::Sha256).toHex().toLower().trimmed();

@@ -582,7 +582,7 @@
                <string/>
               </property>
               <property name="icon">
-               <iconset theme="cat"/>
+               <iconset theme="launcher"/>
               </property>
               <property name="flat">
                <bool>true</bool>
