@@ -96,11 +96,21 @@ void ManifestDownloadTask::downloadJava(const QJsonDocument& doc)
             auto isExec = meta["executable"].toBool();
             auto url = raw["url"].toString();
             if (!url.isEmpty() && QUrl(url).isValid()) {
+                // If file already exists and is non-empty, skip re-downloading
+                if (QFile::exists(file) && QFileInfo(file).size() > 0) {
+                    continue;
+                }
                 auto f = File{ file, url, QByteArray::fromHex(raw["sha1"].toString().toLatin1()), isExec };
                 toDownload.push_back(f);
             }
         }
     }
+
+    if (toDownload.empty()) {
+        emitSucceeded();
+        return;
+    }
+
     auto elementDownload = makeShared<NetJob>("JRE::FileDownload", APPLICATION->network());
     for (const auto& file : toDownload) {
         auto dl = Net::NetRequest::makeFile(file.url, file.path);

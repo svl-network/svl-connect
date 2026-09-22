@@ -66,8 +66,8 @@ auto NetJob::addNetAction(Net::NetRequest::Ptr action) -> bool
 
 void NetJob::executeNextSubTask()
 {
-    // We're finished, check for failures and retry if we can (up to 3 times)
-    if (isRunning() && m_queue.isEmpty() && m_doing.isEmpty() && !m_failed.isEmpty() && m_try < 3) {
+    // We're finished, check for failures and retry if we can (up to 6 times)
+    if (isRunning() && m_queue.isEmpty() && m_doing.isEmpty() && !m_failed.isEmpty() && m_try < 6) {
         m_try += 1;
         m_failed.removeIf([this](QHash<Task*, Task::Ptr>::iterator task) {
             // there is no point in retying on 404 Not Found
