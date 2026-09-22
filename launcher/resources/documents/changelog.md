@@ -2,6 +2,7 @@
 
 ### Live Commit History (main branch)
 
+* **fix(build): resolve MSVC compilation and NOMINMAX for v1.0.6** `(0cae199e3)` - *HeyTaxx*, 2026-09-19
 * **feat(launcher): add Inbuilt Client Mods suite, server policy display, crash console focus, and instance deduplication** `(57864d1e1)` - *HeyTaxx*, 2026-09-19
 * **chore(release): package and release v1.0.5 with auto-update integration** `(4f18ee43f)` - *HeyTaxx*, 2026-09-08
 * **feat: implement SVLConnectPage for server browsing and add project changelog** `(820a5b4cc)` - *HeyTaxx*, 2026-09-08
@@ -31,7 +32,6 @@
 * **feat: implement server mod synchronization logic and UI integration** `(16297558a)` - *HeyTaxx*, 2026-08-18
 * **feat: implement server mod synchronization, update management, and SVL connection UI page** `(08c8cfc3d)` - *HeyTaxx*, 2026-08-18
 * **chore: remove unused configuration file** `(861d375f8)` - *HeyTaxx*, 2026-08-18
-* **chore: remove deprecated legacy utility module** `(5d362e3f2)` - *HeyTaxx*, 2026-08-18
 
 ---
 *Compiled directly from repository source tree.*
