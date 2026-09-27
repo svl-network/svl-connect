@@ -160,11 +160,33 @@ void SVLModSyncTask::processManifest(const QByteArray& data)
         QJsonObject modObj = val.toObject();
         SVLModEntry entry;
         entry.projectId = modObj.value("projectId").toString();
-        entry.fileName = modObj.value("fileName").toString();
-        entry.sha256 = modObj.value("sha256").toString().toLower();
+        
+        // Strict filename sanitization: extract basename only to prevent directory traversal / Zip Slip
+        QString rawFileName = modObj.value("fileName").toString();
+        QString safeFileName = QFileInfo(rawFileName).fileName();
+        if (safeFileName.isEmpty() || safeFileName.contains("..") || safeFileName.contains("/") || safeFileName.contains("\\")) {
+            continue;
+        }
+
+        // Whitelist allowed file extensions for mods/packs/assets
+        QString lowerExt = safeFileName.toLower();
+        if (!lowerExt.endsWith(".jar") && !lowerExt.endsWith(".zip") && !lowerExt.endsWith(".json") &&
+            !lowerExt.endsWith(".txt") && !lowerExt.endsWith(".png") && !lowerExt.endsWith(".toml") && !lowerExt.endsWith(".properties")) {
+            qWarning() << "[SVLModSync] Prohibited file extension detected, skipping:" << safeFileName;
+            continue;
+        }
+
+        entry.fileName = safeFileName;
+        entry.sha256 = modObj.value("sha256").toString().toLower().trimmed();
         entry.downloadUrl = modObj.value("downloadUrl").toString();
         entry.tier = modObj.value("tier").toString("official").toLower();
-        entry.targetFolder = modObj.value("targetFolder").toString("mods").toLower();
+
+        // Strict folder whitelisting: only allow known safe subdirectories inside gameRoot
+        QString rawFolder = modObj.value("targetFolder").toString("mods").toLower().trimmed();
+        if (rawFolder != "mods" && rawFolder != "shaderpacks" && rawFolder != "resourcepacks" && rawFolder != "config") {
+            rawFolder = "mods";
+        }
+        entry.targetFolder = rawFolder;
 
         // If the server is a pure plugin server (Paper/Spigot), ignore server-only plugins
         if (isPluginServer) {
@@ -557,7 +579,17 @@ void SVLModSyncTask::performCleanSyncAndDownload()
         QString destFolder = (folder == "mods") ? m_modsDirPath : FS::PathCombine(gameRoot, folder);
         FS::ensureFolderPathExists(destFolder);
 
-        QString targetPath = FS::PathCombine(destFolder, mod.fileName);
+        QString safeBaseName = QFileInfo(mod.fileName).fileName();
+        QString targetPath = FS::PathCombine(destFolder, safeBaseName);
+
+        // Security assertion: target path must strictly reside within instance gameRoot
+        QString cleanTarget = QDir::cleanPath(targetPath);
+        QString cleanRoot = QDir::cleanPath(gameRoot);
+        if (!cleanTarget.startsWith(cleanRoot)) {
+            qWarning() << "[SVLModSync] Security assertion failed: path traversal attempt blocked for" << mod.fileName;
+            continue;
+        }
+
         if (QFile::exists(targetPath)) {
             QFile::remove(targetPath);
         }
