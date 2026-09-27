@@ -63,3 +63,5 @@ flatbuild
 # Snap
 *.snap
 cmake/vcpkg
+dist/
+release-dist/

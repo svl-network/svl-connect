@@ -2,6 +2,8 @@
 
 ### Live Commit History (main branch)
 
+* **fix(java): skip existing JRE files during download and increase network retries** `(f7700423d)` - *HeyTaxx*, 2026-09-22
+* **fix(sync): remove invalid client mod placeholder URLs causing 404 sync failures** `(6e25b8aaf)` - *HeyTaxx*, 2026-09-22
 * **fix(build): resolve MSVC compilation and NOMINMAX for v1.0.6** `(0cae199e3)` - *HeyTaxx*, 2026-09-19
 * **feat(launcher): add Inbuilt Client Mods suite, server policy display, crash console focus, and instance deduplication** `(57864d1e1)` - *HeyTaxx*, 2026-09-19
 * **chore(release): package and release v1.0.5 with auto-update integration** `(4f18ee43f)` - *HeyTaxx*, 2026-09-08
@@ -30,8 +32,6 @@
 * **feat: implement SVLModSyncTask and UI components for automated server mod synchronization** `(10db6ad6f)` - *HeyTaxx*, 2026-08-19
 * **feat: implement SVLModSyncTask for automated server manifest processing and mod synchronization** `(54f60727e)` - *HeyTaxx*, 2026-08-18
 * **feat: implement server mod synchronization logic and UI integration** `(16297558a)` - *HeyTaxx*, 2026-08-18
-* **feat: implement server mod synchronization, update management, and SVL connection UI page** `(08c8cfc3d)` - *HeyTaxx*, 2026-08-18
-* **chore: remove unused configuration file** `(861d375f8)` - *HeyTaxx*, 2026-08-18
 
 ---
 *Compiled directly from repository source tree.*

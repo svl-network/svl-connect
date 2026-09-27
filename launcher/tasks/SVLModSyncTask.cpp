@@ -495,18 +495,24 @@ void SVLModSyncTask::performCleanSyncAndDownload()
                 }
 
                 if (!isManifestMatch) {
-                    // Only clean non-mod folders if the manifest explicitly targets them
-                    bool folderHasManifestEntries = false;
+                    // Check if this local file is an outdated version of an incoming manifest mod
+                    bool isOutdatedVersionOfManifestMod = false;
                     for (const auto& m : m_manifestMods) {
                         QString target = m.targetFolder.isEmpty() ? "mods" : m.targetFolder.toLower();
                         if (target == folderName) {
-                            folderHasManifestEntries = true;
-                            break;
+                            if (!m.projectId.isEmpty() && localFile.toLower().contains(m.projectId.toLower())) {
+                                isOutdatedVersionOfManifestMod = true;
+                                break;
+                            }
                         }
                     }
-                    if (folderName == "mods" || folderHasManifestEntries) {
-                        qDebug() << "[SVLModSync] Deleting local unlisted/outdated file in" << folderName << ":" << localFile;
+
+                    if (isOutdatedVersionOfManifestMod) {
+                        qDebug() << "[SVLModSync] Replacing outdated manifest file in" << folderName << ":" << localFile;
                         QFile::remove(fullPath);
+                    } else {
+                        // Preserve user-installed client mods, shaderpacks, and resourcepacks
+                        qDebug() << "[SVLModSync] Preserving user-installed file in" << folderName << ":" << localFile;
                     }
                 } else {
                     localHashes.insert(hash);
