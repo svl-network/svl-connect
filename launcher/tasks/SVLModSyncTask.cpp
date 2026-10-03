@@ -246,7 +246,159 @@ void SVLModSyncTask::processManifest(const QByteArray& data)
         return;
     }
 
+    injectInbuiltClientMods();
+
     performCleanSyncAndDownload();
+}
+
+void SVLModSyncTask::injectInbuiltClientMods()
+{
+    if (!m_instance) {
+        return;
+    }
+
+    auto settings = APPLICATION->settings();
+    bool altLook = settings->get("ClientMod_AltLook").toBool();
+    bool freecam = settings->get("ClientMod_Freecam").toBool();
+    bool minimap = settings->get("ClientMod_Minimap").toBool();
+    bool itemPhysics = settings->get("ClientMod_ItemPhysics").toBool();
+    bool fovZoom = settings->get("ClientMod_FovZoom").toBool();
+    bool perf = settings->get("ClientMod_Performance").toBool();
+
+    // Check server policy disallow list
+    for (const QString& disallowed : m_disallowedClientMods) {
+        QString d = disallowed.toLower().trimmed();
+        if (d.contains("freecam")) freecam = false;
+        if (d.contains("minimap") || d.contains("xaero")) minimap = false;
+        if (d.contains("betterthirdperson") || d.contains("altlook") || d.contains("freelook")) altLook = false;
+        if (d.contains("itemphysic")) itemPhysics = false;
+        if (d.contains("zoom")) fovZoom = false;
+    }
+
+    // Check if the instance was already provisioned or already has mods installed
+    QDir modsDir(m_modsDirPath);
+    QStringList existingModFiles = modsDir.entryList(QStringList() << "*.jar" << "*.disabled" << "*.JAR" << "*.DISABLED", QDir::Files);
+    bool alreadyProvisioned = m_instance->settings()->get("SVL_InbuiltModsProvisioned").toBool();
+    if (!alreadyProvisioned && !existingModFiles.isEmpty()) {
+        alreadyProvisioned = true;
+        m_instance->settings()->set("SVL_InbuiltModsProvisioned", true);
+    }
+
+    QStringList userRemovedMods = m_instance->settings()->get("UserRemovedMods").toStringList();
+
+    auto isModPresentInFolder = [&](const QString& keyword) {
+        for (const QString& f : existingModFiles) {
+            if (f.contains(keyword, Qt::CaseInsensitive)) {
+                return true; // Exists as .jar or .disabled
+            }
+        }
+        return false;
+    };
+
+    auto isExplicitlyRemovedByUser = [&](const QString& keyword, const QString& fileName) {
+        for (const QString& r : userRemovedMods) {
+            if (r.contains(keyword, Qt::CaseInsensitive) || fileName.compare(r, Qt::CaseInsensitive) == 0) {
+                return true;
+            }
+        }
+        // If the instance has already been provisioned with mods, and this mod is not present at all,
+        // it means the user deleted it from the instance!
+        if (alreadyProvisioned && !isModPresentInFolder(keyword)) {
+            return true;
+        }
+        return false;
+    };
+
+    auto hasModInManifest = [this](const QString& keyword) {
+        for (const auto& m : m_manifestMods) {
+            if (m.fileName.contains(keyword, Qt::CaseInsensitive) || m.projectId.contains(keyword, Qt::CaseInsensitive)) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    bool is26 = m_mcVersion.startsWith("26.");
+    bool needFabricApi = false;
+
+    // ✦ OFFICIAL IN-HOUSE SUNVEIL CONNECT CLIENT MOD (Custom Capes, 360° Freelook, Smooth Zoom, Lunar HUD & Settings) ✦
+    if (!hasModInManifest("sunveil-client") && !isExplicitlyRemovedByUser("sunveil-client", "sunveil-client-1.0.0.jar")) {
+        QString bundledJar = QDir(QCoreApplication::applicationDirPath()).filePath("jars/sunveil-client-1.0.0.jar");
+        QString targetPath = QDir(m_modsDirPath).filePath("sunveil-client-1.0.0.jar");
+
+        if (QFile::exists(bundledJar) && !QFile::exists(targetPath)) {
+            QDir(m_modsDirPath).mkpath(".");
+            QFile::copy(bundledJar, targetPath);
+            qDebug() << "[SVLModSync] Installed bundled official Sunveil Client mod:" << targetPath;
+        } else if (!QFile::exists(targetPath)) {
+            SVLModEntry entry;
+            entry.projectId = "sunveil-client";
+            entry.fileName = "sunveil-client-1.0.0.jar";
+            entry.downloadUrl = "https://sunveil.net/api/client/sunveil-client-1.0.0.jar";
+            entry.tier = "official";
+            entry.targetFolder = "mods";
+            m_manifestMods.append(entry);
+        }
+        needFabricApi = true;
+    }
+
+    if (perf) {
+        if (!hasModInManifest("sodium") && !isExplicitlyRemovedByUser("sodium", is26 ? "sodium-fabric-0.9.2+mc26.1.2.jar" : "sodium-fabric-0.8.13+mc1.21.1.jar")) {
+            SVLModEntry entry;
+            entry.projectId = "sodium";
+            if (is26) {
+                entry.fileName = "sodium-fabric-0.9.2+mc26.1.2.jar";
+                entry.sha256 = "dd19aaf6755788673941329cff855d89870dc9f69363c653c7f5378e799834f3";
+                entry.downloadUrl = "https://cdn.modrinth.com/data/AANobbMI/versions/tZQ3jqnf/sodium-fabric-0.9.2%2Bmc26.1.2.jar";
+            } else {
+                entry.fileName = "sodium-fabric-0.8.13+mc1.21.1.jar";
+                entry.sha256 = "3d43c14985a4deb19c654aad3393b454cf57e1ebcbba86c4ae6a98dfc60eca2d";
+                entry.downloadUrl = "https://cdn.modrinth.com/data/AANobbMI/versions/SMxNOGZ6/sodium-fabric-0.8.13%2Bmc1.21.1.jar";
+            }
+            entry.tier = "official";
+            entry.targetFolder = "mods";
+            m_manifestMods.append(entry);
+            needFabricApi = true;
+        }
+        if (!hasModInManifest("iris") && !isExplicitlyRemovedByUser("iris", is26 ? "iris-fabric-1.11.4+mc26.1.2.jar" : "iris-fabric-1.8.14-beta.1+mc1.21.1.jar")) {
+            SVLModEntry entry;
+            entry.projectId = "iris";
+            if (is26) {
+                entry.fileName = "iris-fabric-1.11.4+mc26.1.2.jar";
+                entry.sha256 = "69bdb6899ba006cf91b16565e4445a7a4f331e39b790c81c99626814bf6e22df";
+                entry.downloadUrl = "https://cdn.modrinth.com/data/YL57xq9U/versions/sZbVsl2Q/iris-fabric-1.11.4%2Bmc26.1.2.jar";
+            } else {
+                entry.fileName = "iris-fabric-1.8.14-beta.1+mc1.21.1.jar";
+                entry.sha256 = "0ceb694040b4628bf3fa02286cfe5f0db833195669ab07f8caa4001359763eff";
+                entry.downloadUrl = "https://cdn.modrinth.com/data/YL57xq9U/versions/bAo1Qhte/iris-fabric-1.8.14-beta.1%2Bmc1.21.1.jar";
+            }
+            entry.tier = "official";
+            entry.targetFolder = "mods";
+            m_manifestMods.append(entry);
+            needFabricApi = true;
+        }
+    }
+
+    if (needFabricApi && !hasModInManifest("fabric-api") && !isExplicitlyRemovedByUser("fabric-api", is26 ? "fabric-api-0.155.3+26.1.2.jar" : "fabric-api-0.116.17+1.21.1.jar")) {
+        SVLModEntry entry;
+        entry.projectId = "fabric-api";
+        if (is26) {
+            entry.fileName = "fabric-api-0.155.3+26.1.2.jar";
+            entry.sha256 = "7fe7bea3dbb7b2e9ff998ab583130cd62fab22ab8a5229656ff14b2e648c91dd";
+            entry.downloadUrl = "https://cdn.modrinth.com/data/P7dR8mSH/versions/3dM0X6ou/fabric-api-0.155.3%2B26.1.2.jar";
+        } else {
+            entry.fileName = "fabric-api-0.116.17+1.21.1.jar";
+            entry.sha256 = "79ac44b40780acbd884b34c50be1e39af682847e5f5cb3b1fddeeaa768dce800";
+            entry.downloadUrl = "https://cdn.modrinth.com/data/P7dR8mSH/versions/Mys3P7lK/fabric-api-0.116.17%2B1.21.1.jar";
+        }
+        entry.tier = "official";
+        entry.targetFolder = "mods";
+        m_manifestMods.append(entry);
+    }
+
+    if (!alreadyProvisioned) {
+        m_instance->settings()->set("SVL_InbuiltModsProvisioned", true);
+    }
 }
 
 bool SVLModSyncTask::prepareInstance(const QString& mcVersion, const QString& loader, const QString& loaderVersion)
@@ -344,14 +496,10 @@ bool SVLModSyncTask::prepareInstance(const QString& mcVersion, const QString& lo
     QString targetLoaderName;
     QString targetLoaderVersion = loaderVersion;
 
-    if (loader == "fabric") {
-        targetLoaderUid = "net.fabricmc.fabric-loader";
-        targetLoaderName = "Fabric Loader";
-        if (targetLoaderVersion.isEmpty()) targetLoaderVersion = "0.16.10";
-    } else if (loader == "neoforge") {
+    if (loader == "neoforge") {
         targetLoaderUid = "net.neoforged";
         targetLoaderName = "NeoForge";
-        if (targetLoaderVersion.isEmpty()) {
+        if (targetLoaderVersion.isEmpty() || !targetLoaderVersion.contains(".")) {
             if (mcVersion.startsWith("1.21.1")) targetLoaderVersion = "21.1.70";
             else if (mcVersion.startsWith("1.21")) targetLoaderVersion = "21.0.167";
             else if (mcVersion.startsWith("1.20.6")) targetLoaderVersion = "20.6.119";
@@ -363,7 +511,7 @@ bool SVLModSyncTask::prepareInstance(const QString& mcVersion, const QString& lo
     } else if (loader == "forge") {
         targetLoaderUid = "net.minecraftforge";
         targetLoaderName = "Forge";
-        if (targetLoaderVersion.isEmpty()) {
+        if (targetLoaderVersion.isEmpty() || !targetLoaderVersion.contains(".")) {
             if (mcVersion.startsWith("1.21.1")) targetLoaderVersion = "52.1.16";
             else if (mcVersion.startsWith("1.20.4")) targetLoaderVersion = "49.0.38";
             else if (mcVersion.startsWith("1.20.1")) targetLoaderVersion = "47.2.20";
@@ -373,9 +521,42 @@ bool SVLModSyncTask::prepareInstance(const QString& mcVersion, const QString& lo
             else if (mcVersion.startsWith("1.12.2")) targetLoaderVersion = "14.23.5.2860";
             else targetLoaderVersion = "52.1.16";
         }
+    } else {
+        // Default to Fabric Loader (for Fabric servers, Paper/Spigot plugin servers, and client mod suite)
+        targetLoaderUid = "net.fabricmc.fabric-loader";
+        targetLoaderName = "Fabric Loader";
+        if (targetLoaderVersion.isEmpty() || !targetLoaderVersion.startsWith("0.") || targetLoaderVersion < "0.19.5") {
+            targetLoaderVersion = "0.19.5";
+        }
     }
 
-    if (!targetLoaderUid.isEmpty()) {
+    if (targetLoaderUid == "net.fabricmc.fabric-loader") {
+        QJsonObject intermediaryComp;
+        intermediaryComp["cachedName"] = "Intermediary Mappings";
+        QJsonArray reqs;
+        QJsonObject req;
+        req["equals"] = mcVersion;
+        req["uid"] = "net.minecraft";
+        reqs.append(req);
+        intermediaryComp["cachedRequires"] = reqs;
+        intermediaryComp["cachedVersion"] = mcVersion;
+        intermediaryComp["dependencyOnly"] = true;
+        intermediaryComp["uid"] = "net.fabricmc.intermediary";
+        intermediaryComp["version"] = mcVersion;
+        components.append(intermediaryComp);
+
+        QJsonObject loaderComp;
+        loaderComp["cachedName"] = targetLoaderName;
+        QJsonArray loaderReqs;
+        QJsonObject loaderReq;
+        loaderReq["uid"] = "net.fabricmc.intermediary";
+        loaderReqs.append(loaderReq);
+        loaderComp["cachedRequires"] = loaderReqs;
+        loaderComp["cachedVersion"] = targetLoaderVersion;
+        loaderComp["uid"] = targetLoaderUid;
+        loaderComp["version"] = targetLoaderVersion;
+        components.append(loaderComp);
+    } else if (!targetLoaderUid.isEmpty()) {
         QJsonObject loaderComp;
         loaderComp["cachedName"] = targetLoaderName;
         loaderComp["cachedVersion"] = targetLoaderVersion;
@@ -423,13 +604,20 @@ bool SVLModSyncTask::prepareInstance(const QString& mcVersion, const QString& lo
         m_instance->settings()->set("OverrideJava", true);
         m_instance->settings()->set("IgnoreJavaCompatibility", true);
 
-        // For large modpacks (>40 mods), ensure at least 4096MB heap to avoid OutOfMemoryError
-        if (m_manifestMods.size() >= 40) {
-            int curMaxMem = m_instance->settings()->get("MaxMemAlloc").toInt();
-            if (curMaxMem < 4096) {
-                m_instance->settings()->set("OverrideMemory", true);
-                m_instance->settings()->set("MaxMemAlloc", 4096);
-            }
+        // Sunveil Performance & Zero-Lag Network Tuning
+        m_instance->settings()->set("OverrideJavaArgs", true);
+        QString optJvmArgs = "-XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+AlwaysPreTouch -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1ReservePercent=20 -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -Dio.netty.allocator.type=pooled -Djava.net.preferIPv4Stack=true -Dsun.net.inetaddr.ttl=30 -Dnetworkaddress.cache.ttl=30";
+        m_instance->settings()->set("JvmArgs", optJvmArgs);
+
+        // Dynamic RAM auto-scaling (minimum 4GB heap to eliminate OutOfMemory and GC stutter)
+        m_instance->settings()->set("OverrideMemory", true);
+        int curMaxMem = m_instance->settings()->get("MaxMemAlloc").toInt();
+        if (curMaxMem < 4096) {
+            m_instance->settings()->set("MaxMemAlloc", 4096);
+        }
+        int curMinMem = m_instance->settings()->get("MinMemAlloc").toInt();
+        if (curMinMem < 2048) {
+            m_instance->settings()->set("MinMemAlloc", 2048);
         }
     }
 
@@ -484,22 +672,51 @@ void SVLModSyncTask::performCleanSyncAndDownload()
         QStringList fileFilters = (folderName == "mods") ? (QStringList() << "*.jar" << "*.JAR") : (QStringList() << "*.zip" << "*.ZIP" << "*.jar" << "*.JAR");
         QStringList localFiles = dir.entryList(fileFilters, QDir::Files);
 
+        if (folderName == "mods") {
+            // Keep user-disabled files disabled! Do not forcefully re-enable them.
+            QStringList disabledModFiles = dir.entryList(QStringList() << "*.disabled" << "*.DISABLED", QDir::Files);
+            for (const QString& dis : disabledModFiles) {
+                QString base = dis;
+                base.chop(QString(".disabled").length());
+                localHashes.insert(base.toLower().trimmed());
+                localHashes.insert(dis.toLower().trimmed());
+            }
+            localFiles = dir.entryList(fileFilters, QDir::Files);
+        }
+
         for (const QString& localFile : localFiles) {
             QString fullPath = dir.absoluteFilePath(localFile);
 
-            // Server-side Mod Policy enforcement: check if mod is explicitly disallowed by the server
-            if (folderName == "mods" && !m_disallowedClientMods.isEmpty()) {
-                bool isDisallowed = false;
+            if (folderName == "mods") {
+                auto settings = APPLICATION->settings();
+                bool altLook = settings->get("ClientMod_AltLook").toBool();
+                bool freecam = settings->get("ClientMod_Freecam").toBool();
+                bool minimap = settings->get("ClientMod_Minimap").toBool();
+                bool itemPhysics = settings->get("ClientMod_ItemPhysics").toBool();
+                bool fovZoom = settings->get("ClientMod_FovZoom").toBool();
+                bool perf = settings->get("ClientMod_Performance").toBool();
+
                 QString lowerName = localFile.toLower();
-                for (const QString& disallowed : m_disallowedClientMods) {
-                    if (lowerName.contains(disallowed)) {
-                        isDisallowed = true;
-                        break;
+                bool shouldDisable = false;
+                if (!altLook && (lowerName.contains("betterthirdperson") || lowerName.contains("better-third-person"))) shouldDisable = true;
+                if (!freecam && lowerName.contains("freecam")) shouldDisable = true;
+                if (!minimap && (lowerName.contains("xaero") || lowerName.contains("minimap"))) shouldDisable = true;
+                if (!itemPhysics && lowerName.contains("itemphysic")) shouldDisable = true;
+                if (!fovZoom && lowerName.contains("zoomify")) shouldDisable = true;
+                if (!perf && (lowerName.contains("sodium") || lowerName.contains("iris") || lowerName.contains("embeddium") || lowerName.contains("oculus"))) shouldDisable = true;
+
+                if (!m_disallowedClientMods.isEmpty()) {
+                    for (const QString& disallowed : m_disallowedClientMods) {
+                        if (lowerName.contains(disallowed)) {
+                            shouldDisable = true;
+                            break;
+                        }
                     }
                 }
-                if (isDisallowed) {
-                    qDebug() << "[SVLModSync] Disabling forbidden client-side mod per server policy:" << localFile;
-                    setStatus(tr("Disabling forbidden client mod '%1' per server policy...").arg(localFile));
+
+                if (shouldDisable) {
+                    qDebug() << "[SVLModSync] Disabling client-side mod:" << localFile;
+                    setStatus(tr("Disabling client mod '%1'...").arg(localFile));
                     QFile::rename(fullPath, fullPath + ".disabled");
                     continue;
                 }
@@ -594,6 +811,30 @@ void SVLModSyncTask::performCleanSyncAndDownload()
             continue;
         }
 
+        // If the mod was disabled by the user (.disabled), do not re-download
+        if (QFile::exists(targetPath + ".disabled") || QFile::exists(targetPath + ".DISABLED")) {
+            qDebug() << "[SVLModSync] Skipping download of user-disabled mod:" << mod.fileName;
+            continue;
+        }
+
+        // If the mod was explicitly removed by the user in Edit Instance, do not re-download
+        if (m_instance && m_instance->settings()) {
+            QStringList userRemoved = m_instance->settings()->get("UserRemovedMods").toStringList();
+            bool removed = false;
+            for (const QString& r : userRemoved) {
+                if (mod.fileName.compare(r, Qt::CaseInsensitive) == 0 ||
+                    (!mod.projectId.isEmpty() && r.contains(mod.projectId, Qt::CaseInsensitive)) ||
+                    r.contains(QFileInfo(mod.fileName).baseName(), Qt::CaseInsensitive)) {
+                    removed = true;
+                    break;
+                }
+            }
+            if (removed) {
+                qDebug() << "[SVLModSync] Skipping download of user-removed mod:" << mod.fileName;
+                continue;
+            }
+        }
+
         if (QFile::exists(targetPath)) {
             QFile::remove(targetPath);
         }
@@ -608,6 +849,12 @@ void SVLModSyncTask::performCleanSyncAndDownload()
             req->addValidator(new Net::ChecksumValidator(QCryptographicHash::Sha256, mod.sha256.toLower().trimmed()));
         }
         m_netJob->addNetAction(req);
+    }
+
+    if (m_netJob->size() == 0) {
+        qDebug() << "[SVLModSync] All assets are up-to-date or intentionally excluded by user. Launching...";
+        finalizeAndLaunch();
+        return;
     }
 
     // Use propagateFromOther to cleanly forward all signals (status, details,

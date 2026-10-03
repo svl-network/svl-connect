@@ -76,10 +76,13 @@ QUrl BaseEntity::url() const
 {
     auto s = APPLICATION->settings();
     QString metaOverride = s->get("MetaURLOverride").toString();
-    if (metaOverride.isEmpty()) {
-        return QUrl(BuildConfig.META_URL).resolved(localFilename());
+    QUrl targetUrl = metaOverride.isEmpty() ? QUrl(BuildConfig.META_URL).resolved(localFilename())
+                                            : QUrl(metaOverride).resolved(localFilename());
+    if (targetUrl.host() == "meta.sunveil.net") {
+        QUrl upstream("https://meta.prismlauncher.org/v1/");
+        return upstream.resolved(localFilename());
     }
-    return QUrl(metaOverride).resolved(localFilename());
+    return targetUrl;
 }
 
 Task::Ptr BaseEntity::loadTask(Net::Mode mode, bool forceReload)

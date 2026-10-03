@@ -31,7 +31,7 @@
         <item row="2" column="3">
          <widget class="QPushButton" name="catPackFolder">
           <property name="toolTip">
-           <string>View cat packs folder.</string>
+           <string>View mascot packs folder.</string>
           </property>
           <property name="text">
            <string>Open Folder</string>
@@ -61,7 +61,7 @@
         <item row="2" column="0">
          <widget class="QLabel" name="catPackLabel">
           <property name="text">
-           <string>&amp;Cat Pack:</string>
+           <string>&amp;Mascot Pack:</string>
           </property>
           <property name="buddy">
            <cstring>catPackComboBox</cstring>
@@ -206,7 +206,7 @@
       <item>
        <widget class="QCheckBox" name="enableCatCheckBox">
         <property name="text">
-         <string>Enable cat</string>
+         <string>Enable mascot</string>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -222,7 +222,7 @@
          <item>
           <widget class="QLabel" name="catOpacityLabel">
            <property name="text">
-            <string>Cat Opacity</string>
+            <string>Mascot Opacity</string>
            </property>
           </widget>
          </item>
@@ -348,7 +348,7 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>Cat Scaling</string>
+            <string>Mascot Scaling</string>
            </property>
           </widget>
          </item>

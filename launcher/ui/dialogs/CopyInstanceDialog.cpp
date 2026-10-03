@@ -154,7 +154,7 @@ const InstanceCopyPrefs& CopyInstanceDialog::getChosenOptions() const
 
 void CopyInstanceDialog::help()
 {
-    DesktopServices::openUrl(QUrl(BuildConfig.HELP_URL.arg("instance-copy")));
+    DesktopServices::openUrl(QUrl(BuildConfig.HELP_URL.contains("prismlauncher.org") || BuildConfig.HELP_URL.isEmpty() ? "https://sunveil.net" : BuildConfig.HELP_URL.arg("instance-copy")));
 }
 
 void CopyInstanceDialog::checkAllCheckboxes(const bool& b)

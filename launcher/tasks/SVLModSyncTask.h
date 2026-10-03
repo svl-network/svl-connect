@@ -43,6 +43,7 @@ private slots:
 
 private:
     void processManifest(const QByteArray& data);
+    void injectInbuiltClientMods();
     bool prepareInstance(const QString& mcVersion, const QString& loader, const QString& loaderVersion);
     void performCleanSyncAndDownload();
     void ensureServerInServersDat();

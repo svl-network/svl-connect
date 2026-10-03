@@ -215,6 +215,14 @@ void ExternalResourcesPage::addItem()
         m_fileSelectionFilter.arg(displayName()), APPLICATION->settings()->get("CentralModsDir").toString(), this->parentWidget());
 
     if (!list.isEmpty()) {
+        if (m_instance && m_instance->settings()) {
+            QStringList removedList = m_instance->settings()->get("UserRemovedMods").toStringList();
+            for (auto filename : list) {
+                QString fn = QFileInfo(filename).fileName();
+                removedList.removeAll(fn);
+            }
+            m_instance->settings()->set("UserRemovedMods", removedList);
+        }
         for (auto filename : list) {
             m_model->installResource(filename);
         }
@@ -276,6 +284,20 @@ void ExternalResourcesPage::removeItems(const QItemSelection& selection)
         if (response != QMessageBox::Yes)
             return;
     }
+
+    if (m_instance && m_instance->settings()) {
+        QStringList removedList = m_instance->settings()->get("UserRemovedMods").toStringList();
+        for (const auto& index : selection.indexes()) {
+            if (index.column() == 0 && index.row() >= 0 && index.row() < m_model->rowCount()) {
+                QString fn = m_model->at(index.row()).fileinfo().fileName();
+                if (!fn.isEmpty() && !removedList.contains(fn, Qt::CaseInsensitive)) {
+                    removedList.append(fn);
+                }
+            }
+        }
+        m_instance->settings()->set("UserRemovedMods", removedList);
+    }
+
     m_model->deleteResources(selection.indexes());
 }
 

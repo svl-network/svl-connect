@@ -241,12 +241,15 @@ void PageContainer::showPage(int row)
 
 void PageContainer::help()
 {
-    if (m_currentPage) {
-        QString pageId = m_currentPage->helpPage();
-        if (pageId.isEmpty()) {
-            return;
-        }
-        DesktopServices::openUrl(QUrl(BuildConfig.HELP_URL.arg(pageId)));
+    QString helpUrl = BuildConfig.HELP_URL;
+    if (helpUrl.isEmpty() || helpUrl.contains("prismlauncher.org")) {
+        helpUrl = "https://sunveil.net";
+    }
+    if (helpUrl.contains("%1")) {
+        QString pageId = m_currentPage ? m_currentPage->helpPage() : QString();
+        DesktopServices::openUrl(QUrl(helpUrl.arg(pageId)));
+    } else {
+        DesktopServices::openUrl(QUrl(helpUrl));
     }
 }
 

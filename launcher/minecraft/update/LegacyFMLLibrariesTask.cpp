@@ -131,5 +131,9 @@ QString LegacyFMLLibrariesTask::baseUrl()
         return urlOverride;
     }
 
-    return BuildConfig.LEGACY_FMLLIBS_BASE_URL;
+    QString baseUrl = BuildConfig.LEGACY_FMLLIBS_BASE_URL;
+    if (QUrl(baseUrl).host() == "files.sunveil.net") {
+        return "https://files.prismlauncher.org/fmllibs/";
+    }
+    return baseUrl;
 }

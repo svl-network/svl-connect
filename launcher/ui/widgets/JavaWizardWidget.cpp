@@ -255,7 +255,7 @@ JavaWizardWidget::ValidationStatus JavaWizardWidget::validate()
                     case QMessageBox::Yes:
                         return ValidationStatus::JavaBad;
                     case QMessageBox::Help:
-                        DesktopServices::openUrl(QUrl(BuildConfig.HELP_URL.arg("java-wizard")));
+                        DesktopServices::openUrl(QUrl(BuildConfig.HELP_URL.contains("prismlauncher.org") || BuildConfig.HELP_URL.isEmpty() ? "https://sunveil.net" : BuildConfig.HELP_URL.arg("java-wizard")));
                         [[fallthrough]];
                     case QMessageBox::No:
                     /* fallthrough */

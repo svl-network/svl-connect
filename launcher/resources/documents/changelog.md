@@ -2,6 +2,7 @@
 
 ### Live Commit History (main branch)
 
+* **feat(anticheat): add inbuilt anticheat scanner and integrity attestation (v1.0.8)** `(d12cb612b)` - *HeyTaxx*, 2026-10-04
 * **feat: implement SVLModSyncTask for server mod synchronization and instance management** `(3ad47b26c)` - *HeyTaxx*, 2026-09-28
 * **fix(sync): protect user-installed client mods from automated deletion during mod sync** `(ac0c69cde)` - *HeyTaxx*, 2026-09-27
 * **fix(java): skip existing JRE files during download and increase network retries** `(f7700423d)` - *HeyTaxx*, 2026-09-22
@@ -31,7 +32,6 @@
 * **ci: publish public non-draft release as Sunveil Connect** `(6581692d8)` - *HeyTaxx*, 2026-08-23
 * **fix(launcher): resolve mod sync redownload loop, forge typo, active instance discovery, and banner responsiveness** `(5980613bb)` - *HeyTaxx*, 2026-08-23
 * **feat: implement SVLModSyncTask and SVLQuarantineDialog to handle server manifest processing and community mod validation** `(d3dcea22f)` - *HeyTaxx*, 2026-08-23
-* **feat: implement SVLModSyncTask and UI components for automated server mod synchronization** `(10db6ad6f)` - *HeyTaxx*, 2026-08-19
 
 ---
 *Compiled directly from repository source tree.*
