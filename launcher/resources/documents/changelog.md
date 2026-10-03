@@ -2,6 +2,8 @@
 
 ### Live Commit History (main branch)
 
+* **feat: implement SVLModSyncTask for server mod synchronization and instance management** `(3ad47b26c)` - *HeyTaxx*, 2026-09-28
+* **fix(sync): protect user-installed client mods from automated deletion during mod sync** `(ac0c69cde)` - *HeyTaxx*, 2026-09-27
 * **fix(java): skip existing JRE files during download and increase network retries** `(f7700423d)` - *HeyTaxx*, 2026-09-22
 * **fix(sync): remove invalid client mod placeholder URLs causing 404 sync failures** `(6e25b8aaf)` - *HeyTaxx*, 2026-09-22
 * **fix(build): resolve MSVC compilation and NOMINMAX for v1.0.6** `(0cae199e3)` - *HeyTaxx*, 2026-09-19
@@ -30,8 +32,6 @@
 * **fix(launcher): resolve mod sync redownload loop, forge typo, active instance discovery, and banner responsiveness** `(5980613bb)` - *HeyTaxx*, 2026-08-23
 * **feat: implement SVLModSyncTask and SVLQuarantineDialog to handle server manifest processing and community mod validation** `(d3dcea22f)` - *HeyTaxx*, 2026-08-23
 * **feat: implement SVLModSyncTask and UI components for automated server mod synchronization** `(10db6ad6f)` - *HeyTaxx*, 2026-08-19
-* **feat: implement SVLModSyncTask for automated server manifest processing and mod synchronization** `(54f60727e)` - *HeyTaxx*, 2026-08-18
-* **feat: implement server mod synchronization logic and UI integration** `(16297558a)` - *HeyTaxx*, 2026-08-18
 
 ---
 *Compiled directly from repository source tree.*

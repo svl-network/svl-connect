@@ -21,6 +21,10 @@
 #include "minecraft/PackProfile.h"
 #include "net/ChecksumValidator.h"
 
+#include "tasks/SVLAntiCheatScanner.h"
+#include "minecraft/auth/AccountList.h"
+#include "minecraft/auth/MinecraftAccount.h"
+
 #include <tag_compound.h>
 #include <tag_list.h>
 #include <tag_primitive.h>
@@ -709,6 +713,31 @@ void SVLModSyncTask::ensureServerInServersDat()
 
 void SVLModSyncTask::finalizeAndLaunch()
 {
+    if (m_instance && SVLAntiCheatScanner::isAnticheatRequiredForServer(m_serverIp, m_disallowedClientMods)) {
+        setStatus(tr("Scanning instance with Inbuilt Anti-Cheat..."));
+        auto scanResult = SVLAntiCheatScanner::scanInstance(m_instance->gameRoot(), m_disallowedClientMods);
+        if (!scanResult.clean) {
+            emitFailed(tr("Connection rejected: Server '%1' prohibits cheats and X-Ray packs.\n\n%2")
+                           .arg(m_serverName, scanResult.errorMessage));
+            return;
+        }
+
+        // Attest clean session to Master API
+        auto account = APPLICATION->accounts()->defaultAccount();
+        QString uuid = account ? account->profileId() : "";
+        QString name = account ? account->profileName() : "";
+        if (!uuid.isEmpty()) {
+            setStatus(tr("Attesting clean client status to Sunveil Network..."));
+            QString token, err;
+            bool ok = SVLAntiCheatScanner::attestCleanSession(m_masterApiBaseUrl, uuid, name, m_serverIp, scanResult.scanDigest, token, err);
+            if (ok) {
+                qDebug() << "[SVLAntiCheat] Successfully registered clean attestation for" << name << "(" << uuid << ")";
+            } else {
+                qWarning() << "[SVLAntiCheat] Attestation notice:" << err;
+            }
+        }
+    }
+
     setStatus(tr("Synchronization complete. Ready to launch."));
     setProgress(100, 100);
 

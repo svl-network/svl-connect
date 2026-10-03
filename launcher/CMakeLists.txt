@@ -402,6 +402,8 @@ set(TASKS_SOURCES
     tasks/MultipleOptionsTask.cpp
     tasks/SVLModSyncTask.h
     tasks/SVLModSyncTask.cpp
+    tasks/SVLAntiCheatScanner.h
+    tasks/SVLAntiCheatScanner.cpp
     tasks/SVLUpdateManager.h
     tasks/SVLUpdateManager.cpp
 )
