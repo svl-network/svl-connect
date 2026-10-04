@@ -20,7 +20,7 @@
  *
  */
 
-#include "SunveilUpdater.h"
+#include "PrismUpdater.h"
 #include "BuildConfig.h"
 #include "ui/dialogs/ProgressDialog.h"
 

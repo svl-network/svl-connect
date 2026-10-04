@@ -20,7 +20,7 @@
  *
  */
 
-#include "SunveilUpdater.h"
+#include "PrismUpdater.h"
 
 #if defined Q_OS_WIN32
 #include "console/WindowsConsole.h"

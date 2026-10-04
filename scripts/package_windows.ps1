@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 $workspace = "C:\svl-network\svl-connect"
 $buildDir = "$workspace\build"
 $distBase = "$workspace\dist"
-$version = "v1.0.8"
+$version = "v1.0.9"
 $distFolder = "$distBase\SVL-Connect-$version-Windows-x64"
 $zipPath = "$distBase\SVL-Connect-$version-Windows-x64-Portable.zip"
 
