@@ -2,6 +2,8 @@
 
 ### Live Commit History (main branch)
 
+* **feat(client): complete Lunar/LabyMod suite: GUIMove, KillEffects, Discord RPC, Capes, Fullbright, Crosshair, Waypoints, Voice & Replay (v1.0.9)** `(v1.0.9)` - *HeyTaxx*, 2026-10-04
+* **feat: add Sunveil Connect launcher UI and core components** `(2fbfd2dda)` - *HeyTaxx*, 2026-10-04
 * **feat(anticheat): add inbuilt anticheat scanner and integrity attestation (v1.0.8)** `(d12cb612b)` - *HeyTaxx*, 2026-10-04
 * **feat: implement SVLModSyncTask for server mod synchronization and instance management** `(3ad47b26c)` - *HeyTaxx*, 2026-09-28
 * **fix(sync): protect user-installed client mods from automated deletion during mod sync** `(ac0c69cde)` - *HeyTaxx*, 2026-09-27
@@ -31,7 +33,6 @@
 * **design(brand): create custom Sunveil Connect vector SVG icon and update all icon templates** `(88934bdb9)` - *HeyTaxx*, 2026-08-23
 * **ci: publish public non-draft release as Sunveil Connect** `(6581692d8)` - *HeyTaxx*, 2026-08-23
 * **fix(launcher): resolve mod sync redownload loop, forge typo, active instance discovery, and banner responsiveness** `(5980613bb)` - *HeyTaxx*, 2026-08-23
-* **feat: implement SVLModSyncTask and SVLQuarantineDialog to handle server manifest processing and community mod validation** `(d3dcea22f)` - *HeyTaxx*, 2026-08-23
 
 ---
 *Compiled directly from repository source tree.*
