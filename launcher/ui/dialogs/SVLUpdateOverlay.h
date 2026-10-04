@@ -19,6 +19,12 @@ public:
                               QWidget* parent = nullptr);
     ~SVLUpdateOverlay() override = default;
 
+    void reject() override {
+        if (!m_isMandatory) {
+            QDialog::reject();
+        }
+    }
+
     static void showUpdate(const QString& version,
                            bool isMandatory,
                            const QString& downloadUrl,

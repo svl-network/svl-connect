@@ -7,6 +7,8 @@
 #include <QDateTime>
 #include <QNetworkRequest>
 
+#include "BuildConfig.h"
+
 namespace SVLSecurity {
 
 inline const char* clientSecret() {
@@ -36,6 +38,7 @@ inline QString generateHWID() {
 inline void injectAuthHeaders(QNetworkRequest& request) {
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("x-svl-hwid", generateHWID().toUtf8());
+    request.setRawHeader("x-svl-version", BuildConfig.printableVersionString().toUtf8());
     const char* sec = clientSecret();
     if (sec && sec[0] != '\0') {
         request.setRawHeader("x-svl-client-secret", sec);
