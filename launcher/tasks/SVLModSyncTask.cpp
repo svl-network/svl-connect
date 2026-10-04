@@ -797,10 +797,43 @@ void SVLModSyncTask::performCleanSyncAndDownload()
 
     for (const auto& mod : m_modsToDownload) {
         QString folder = mod.targetFolder.isEmpty() ? "mods" : mod.targetFolder.toLower();
+        if (folder != "mods" && folder != "resourcepacks" && folder != "shaderpacks") {
+            folder = "mods";
+        }
         QString destFolder = (folder == "mods") ? m_modsDirPath : FS::PathCombine(gameRoot, folder);
         FS::ensureFolderPathExists(destFolder);
 
-        QString safeBaseName = QFileInfo(mod.fileName).fileName();
+        QString safeBaseName = QFileInfo(mod.fileName).fileName().trimmed();
+        safeBaseName.remove("..");
+        safeBaseName.remove("/");
+        safeBaseName.remove("\\");
+
+        // Anti-Malware & Native Executable Guard
+        QString lowerName = safeBaseName.toLower();
+        if (!lowerName.endsWith(".jar") && !lowerName.endsWith(".zip")) {
+            qWarning() << "[SVLModSync] Security violation: Non-JAR/ZIP download rejected:" << mod.fileName;
+            continue;
+        }
+
+        const QStringList blockedExts = { ".exe", ".bat", ".cmd", ".ps1", ".vbs", ".dll", ".so", ".dylib", ".scr", ".msi", ".pif", ".hta", ".cpl", ".reg" };
+        bool isBlocked = false;
+        for (const QString& ext : blockedExts) {
+            if (lowerName.contains(ext)) {
+                isBlocked = true;
+                break;
+            }
+        }
+        if (isBlocked) {
+            qWarning() << "[SVLModSync] Security violation: Dangerous payload extension detected in:" << mod.fileName;
+            continue;
+        }
+
+        // Insecure Protocol Guard: Enforce HTTPS strictly
+        if (!mod.downloadUrl.startsWith("https://", Qt::CaseInsensitive)) {
+            qWarning() << "[SVLModSync] Security violation: Insecure HTTP download rejected for:" << mod.fileName;
+            continue;
+        }
+
         QString targetPath = FS::PathCombine(destFolder, safeBaseName);
 
         // Security assertion: target path must strictly reside within instance gameRoot
