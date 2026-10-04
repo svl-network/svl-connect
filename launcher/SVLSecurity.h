@@ -10,7 +10,11 @@
 namespace SVLSecurity {
 
 inline const char* clientSecret() {
-    return "svl_prod_sec_99a8b7c6d5";
+#ifdef SVL_CLIENT_SECRET
+    return SVL_CLIENT_SECRET;
+#else
+    return "";
+#endif
 }
 
 // Generate a hashed HWID to ensure privacy while maintaining uniqueness
@@ -32,7 +36,10 @@ inline QString generateHWID() {
 inline void injectAuthHeaders(QNetworkRequest& request) {
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("x-svl-hwid", generateHWID().toUtf8());
-    request.setRawHeader("x-svl-client-secret", clientSecret());
+    const char* sec = clientSecret();
+    if (sec && sec[0] != '\0') {
+        request.setRawHeader("x-svl-client-secret", sec);
+    }
 }
 
 } // namespace SVLSecurity
