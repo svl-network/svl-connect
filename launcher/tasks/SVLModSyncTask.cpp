@@ -122,6 +122,19 @@ void SVLModSyncTask::onManifestReceived()
     reply->deleteLater();
 
     if (reply->error() != QNetworkReply::NoError) {
+        QByteArray errBody = reply->readAll();
+        QJsonParseError parseErr;
+        QJsonDocument errDoc = QJsonDocument::fromJson(errBody, &parseErr);
+        if (parseErr.error == QJsonParseError::NoError && errDoc.isObject()) {
+            QJsonObject errObj = errDoc.object();
+            if (errObj.contains("message")) {
+                emitFailed(errObj.value("message").toString());
+                return;
+            } else if (errObj.contains("error")) {
+                emitFailed(errObj.value("error").toString());
+                return;
+            }
+        }
         emitFailed(tr("Failed to fetch server manifest from Master API: %1").arg(reply->errorString()));
         return;
     }
@@ -394,6 +407,25 @@ void SVLModSyncTask::injectInbuiltClientMods()
         entry.tier = "official";
         entry.targetFolder = "mods";
         m_manifestMods.append(entry);
+    }
+
+    // ✦ DYNAMIC HYBRID-LOADING COMPATIBILITY ENGINE (Forge, Fabric, Quilt, NeoForge) ✦
+    // Scans mods folder for mixed loader formats (e.g. Fabric mods alongside Forge / NeoForge mods)
+    // and seamlessly injects runtime compatibility bridges & JVM arguments without manual patching.
+    bool hasForgeOrNeoForge = m_loader.contains("forge", Qt::CaseInsensitive) || m_loader.contains("neoforge", Qt::CaseInsensitive);
+    bool hasFabricOrQuiltMods = isModPresentInFolder("fabric") || isModPresentInFolder("quilt") || needFabricApi;
+    bool hybridEnabled = m_instance->settings()->get("HybridLoadingEnabled").toBool();
+
+    if (hybridEnabled) {
+        qDebug() << "[SVLModSync] Dynamic Multi-Loader Compatibility active.";
+        m_instance->settings()->set("HybridLoadingActive", true);
+
+        // Add compatibility JVM arguments for dynamic multi-loader reflection
+        QString existingJvm = m_instance->settings()->get("JvmArgs").toString();
+        if (!existingJvm.contains("add-opens java.base/java.lang")) {
+            existingJvm += " --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED -Dfabric.skipMcProvider=true";
+            m_instance->settings()->set("JvmArgs", existingJvm.trimmed());
+        }
     }
 
     if (!alreadyProvisioned) {

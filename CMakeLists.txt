@@ -190,7 +190,7 @@ set(Launcher_LEGACY_FMLLIBS_BASE_URL "https://files.sunveil.net/fmllibs/" CACHE 
 ######## Set version numbers ########
 set(Launcher_VERSION_MAJOR 1)
 set(Launcher_VERSION_MINOR 0)
-set(Launcher_VERSION_PATCH 0)
+set(Launcher_VERSION_PATCH 9)
 
 set(Launcher_VERSION_NAME "${Launcher_VERSION_MAJOR}.${Launcher_VERSION_MINOR}.${Launcher_VERSION_PATCH}")
 set(Launcher_VERSION_NAME4 "${Launcher_VERSION_MAJOR}.${Launcher_VERSION_MINOR}.${Launcher_VERSION_PATCH}.0")

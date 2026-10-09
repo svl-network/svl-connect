@@ -2,7 +2,12 @@
 
 ### Live Commit History (main branch)
 
-* **feat(client): complete Lunar/LabyMod suite: GUIMove, KillEffects, Discord RPC, Capes, Fullbright, Crosshair, Waypoints, Voice & Replay (v1.0.9)** `(v1.0.9)` - *HeyTaxx*, 2026-10-04
+* **Security Policy: Transmit version header and prevent dismissal of mandatory update overlays** `(7274f14ae)` - *HeyTaxx*, 2026-10-04
+* **Security Hardening: Enforce HTTPS, strict .jar/.zip extension checks, and path traversal guards on mod sync** `(7a371d244)` - *HeyTaxx*, 2026-10-04
+* **chore: untrack precompiled binaries in dist and release-dist** `(e948de947)` - *HeyTaxx*, 2026-10-04
+* **security: remove hardcoded client secret and CurseForge API key** `(e0830b8ec)` - *HeyTaxx*, 2026-10-04
+* **fix(build): resolve PrismUpdater header includes, missing assets, and bump packaging to v1.0.9** `(89ac47bb2)` - *HeyTaxx*, 2026-10-04
+* **docs: update changelog for v1.0.9 client suite** `(4bd74e594)` - *HeyTaxx*, 2026-10-04
 * **feat: add Sunveil Connect launcher UI and core components** `(2fbfd2dda)` - *HeyTaxx*, 2026-10-04
 * **feat(anticheat): add inbuilt anticheat scanner and integrity attestation (v1.0.8)** `(d12cb612b)` - *HeyTaxx*, 2026-10-04
 * **feat: implement SVLModSyncTask for server mod synchronization and instance management** `(3ad47b26c)` - *HeyTaxx*, 2026-09-28
@@ -27,12 +32,6 @@
 * **feat: implement modular legacy launcher support with online mode fixes and utility libraries** `(746961483)` - *HeyTaxx*, 2026-09-05
 * **docs: add project changelog and remove obsolete documentation file** `(9f243f797)` - *HeyTaxx*, 2026-08-29
 * **feat: implement SVLConnectPage to display and manage server connections via remote API** `(53fc40c25)` - *HeyTaxx*, 2026-08-29
-* **docs: add project changelog and remove obsolete documentation file** `(ffd8b96b7)` - *HeyTaxx*, 2026-08-29
-* **fix(assets): generate and embed Sunveil multi-resolution ICO and 256px PNG binary assets** `(9f3d54f59)` - *HeyTaxx*, 2026-08-24
-* **style(branding): replace Prism assets with Sunveil solar prism and update server SVG icons and offline status UI** `(44cf31060)` - *HeyTaxx*, 2026-08-24
-* **design(brand): create custom Sunveil Connect vector SVG icon and update all icon templates** `(88934bdb9)` - *HeyTaxx*, 2026-08-23
-* **ci: publish public non-draft release as Sunveil Connect** `(6581692d8)` - *HeyTaxx*, 2026-08-23
-* **fix(launcher): resolve mod sync redownload loop, forge typo, active instance discovery, and banner responsiveness** `(5980613bb)` - *HeyTaxx*, 2026-08-23
 
 ---
 *Compiled directly from repository source tree.*
