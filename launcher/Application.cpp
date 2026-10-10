@@ -110,6 +110,7 @@
 #include "net/HttpMetaCache.h"
 
 #include "updater/ExternalUpdater.h"
+#include "ui/pages/global/SVLClientModsPage.h"
 
 #include "tools/JProfiler.h"
 #include "tools/JVisualVM.h"
@@ -1079,6 +1080,7 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
 #endif
 
     connect(this, &Application::aboutToQuit, this, [this]() {
+        SVLClientModsPage::applyPendingLauncherUpdateOnExit();
         if (m_instances) {
             // save any remaining instance state
             m_instances->saveNow();

@@ -10,6 +10,12 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QFileInfo>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QTimer>
+#include <QProcess>
+#include <QTextStream>
 
 SVLClientModsPage::SVLClientModsPage(QWidget* parent)
     : QWidget(parent)
@@ -53,6 +59,15 @@ void SVLClientModsPage::setupUI()
     mainLayout->addWidget(headerSub);
 
     mainLayout->addSpacing(8);
+
+    // 0. Auto-Updates (Client & Launcher)
+    mainLayout->addWidget(createModRow(
+        tr("Auto-Updates (Client & Launcher)"),
+        tr("Automatically download and apply updates for Sunveil Client mod and SVL Connect launcher as soon as the game or launcher closes."),
+        "ClientMod_AutoUpdate",
+        &m_autoUpdateCheck,
+        "CORE"
+    ));
 
     // 1. Alt Look (Free Look / 360° Perspective)
     mainLayout->addWidget(createModRow(
@@ -287,6 +302,10 @@ QWidget* SVLClientModsPage::createModRow(const QString& title, const QString& de
 
 bool SVLClientModsPage::apply()
 {
+    if (m_autoUpdateCheck) {
+        APPLICATION->settings()->set("ClientMod_AutoUpdate", m_autoUpdateCheck->isChecked());
+        APPLICATION->settings()->set("AutoUpdateClient", m_autoUpdateCheck->isChecked());
+    }
     if (m_altLookCheck) APPLICATION->settings()->set("ClientMod_AltLook", m_altLookCheck->isChecked());
     if (m_freecamCheck) APPLICATION->settings()->set("ClientMod_Freecam", m_freecamCheck->isChecked());
     if (m_minimapCheck) APPLICATION->settings()->set("ClientMod_Minimap", m_minimapCheck->isChecked());
@@ -360,6 +379,8 @@ void SVLClientModsPage::syncSettingsToInstance(const QString& gameRoot)
     modules["betterF3"] = settings->get("ClientMod_BetterF3").toBool();
 
     rootObj["modules"] = modules;
+    auto autoUpSetting = settings->get("ClientMod_AutoUpdate");
+    rootObj["autoUpdate"] = autoUpSetting.isValid() ? autoUpSetting.toBool() : true;
     rootObj["enableCapes"] = settings->get("ClientMod_Cosmetics").toBool();
     rootObj["freelookDecouple"] = settings->get("ClientMod_FreelookDecouple").toBool();
     rootObj["lookNickname"] = settings->get("ClientMod_LookNickname").toBool();
@@ -388,9 +409,15 @@ void SVLClientModsPage::syncInstanceToSettings(const QString& gameRoot)
     QJsonObject rootObj = QJsonDocument::fromJson(file.readAll()).object();
     file.close();
 
+    auto settings = APPLICATION->settings();
+    if (rootObj.contains("autoUpdate")) {
+        bool autoUp = rootObj["autoUpdate"].toBool();
+        settings->set("ClientMod_AutoUpdate", autoUp);
+        settings->set("AutoUpdateClient", autoUp);
+    }
+
     if (!rootObj.contains("modules")) return;
     QJsonObject modules = rootObj["modules"].toObject();
-    auto settings = APPLICATION->settings();
 
     if (modules.contains("perspective")) settings->set("ClientMod_AltLook", modules["perspective"].toBool());
     if (modules.contains("freecam")) settings->set("ClientMod_Freecam", modules["freecam"].toBool());
@@ -416,4 +443,135 @@ void SVLClientModsPage::syncInstanceToSettings(const QString& gameRoot)
 
     if (rootObj.contains("freelookDecouple")) settings->set("ClientMod_FreelookDecouple", rootObj["freelookDecouple"].toBool());
     if (rootObj.contains("lookNickname")) settings->set("ClientMod_LookNickname", rootObj["lookNickname"].toBool());
+}
+
+void SVLClientModsPage::performPostGameAutoUpdate(const QString& gameRoot)
+{
+    auto settings = APPLICATION->settings();
+    auto autoUpVal = settings->get("ClientMod_AutoUpdate");
+    bool autoUpdate = autoUpVal.isValid() ? autoUpVal.toBool() : true;
+    if (!autoUpdate) return;
+
+    qDebug() << "[SVLAutoUpdate] Performing post-game update checks...";
+
+    // 1. Instantly copy newer bundled client mod jar to instance if present
+    QString appDir = QCoreApplication::applicationDirPath();
+    QString bundledJar = QDir(appDir).filePath("jars/sunveil-client-1.0.0.jar");
+    if (!gameRoot.isEmpty() && QFile::exists(bundledJar)) {
+        QString targetMod = QDir(gameRoot).filePath("mods/sunveil-client-1.0.0.jar");
+        QFileInfo bInfo(bundledJar);
+        QFileInfo tInfo(targetMod);
+        if (!tInfo.exists() || bInfo.size() != tInfo.size() || bInfo.lastModified() > tInfo.lastModified()) {
+            QDir(gameRoot).mkpath("mods");
+            QFile::remove(targetMod);
+            if (QFile::copy(bundledJar, targetMod)) {
+                qDebug() << "[SVLAutoUpdate] Synchronized client mod to instance mods:" << targetMod;
+            }
+        }
+    }
+
+    // 2. Fetch latest client mod & launcher update in the background
+    QTimer::singleShot(200, [gameRoot, appDir]() {
+        auto* netMgr = new QNetworkAccessManager();
+        QUrl jarUrl("https://realms.sunveil.net/downloads/sunveil-client-1.0.0.jar");
+        QNetworkRequest req(jarUrl);
+        req.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+
+        auto* reply = netMgr->get(req);
+        QObject::connect(reply, &QNetworkReply::finished, [reply, netMgr, gameRoot, appDir]() {
+            reply->deleteLater();
+            netMgr->deleteLater();
+            if (reply->error() == QNetworkReply::NoError) {
+                QByteArray data = reply->readAll();
+                if (data.size() > 50000) {
+                    QString bundledJar = QDir(appDir).filePath("jars/sunveil-client-1.0.0.jar");
+                    QDir(appDir).mkpath("jars");
+                    QFileInfo bInfo(bundledJar);
+                    if (!bInfo.exists() || bInfo.size() != data.size()) {
+                        QFile f(bundledJar);
+                        if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+                            f.write(data);
+                            f.close();
+                            qDebug() << "[SVLAutoUpdate] Updated bundled jar:" << data.size() << "bytes";
+                        }
+                    }
+                    if (!gameRoot.isEmpty()) {
+                        QString targetMod = QDir(gameRoot).filePath("mods/sunveil-client-1.0.0.jar");
+                        QFileInfo tInfo(targetMod);
+                        if (!tInfo.exists() || tInfo.size() != data.size()) {
+                            QDir(gameRoot).mkpath("mods");
+                            QFile f(targetMod);
+                            if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+                                f.write(data);
+                                f.close();
+                                qDebug() << "[SVLAutoUpdate] Updated instance client mod:" << data.size() << "bytes";
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        checkForLauncherUpdates();
+    });
+}
+
+void SVLClientModsPage::checkForLauncherUpdates()
+{
+    auto settings = APPLICATION->settings();
+    auto autoUpVal = settings->get("ClientMod_AutoUpdate");
+    bool autoUpdate = autoUpVal.isValid() ? autoUpVal.toBool() : true;
+    if (!autoUpdate) return;
+
+    QString appDir = QCoreApplication::applicationDirPath();
+    QString targetNewExe = QDir(appDir).filePath("svl-connect.exe.new");
+    if (QFile::exists(targetNewExe)) return;
+
+    auto* netMgr = new QNetworkAccessManager();
+    QUrl exeUrl("https://realms.sunveil.net/downloads/svl-connect.exe");
+    QNetworkRequest req(exeUrl);
+    req.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+
+    auto* reply = netMgr->get(req);
+    QObject::connect(reply, &QNetworkReply::finished, [reply, netMgr, appDir, targetNewExe]() {
+        reply->deleteLater();
+        netMgr->deleteLater();
+        if (reply->error() == QNetworkReply::NoError) {
+            QByteArray data = reply->readAll();
+            QString currentExe = QDir(appDir).filePath("svl-connect.exe");
+            QFileInfo curInfo(currentExe);
+            if (data.size() > 1000000 && (!curInfo.exists() || curInfo.size() != data.size())) {
+                QFile f(targetNewExe);
+                if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+                    f.write(data);
+                    f.close();
+                    qDebug() << "[SVLAutoUpdate] Staged pending launcher update:" << data.size() << "bytes to" << targetNewExe;
+                }
+            }
+        }
+    });
+}
+
+void SVLClientModsPage::applyPendingLauncherUpdateOnExit()
+{
+    QString appDir = QCoreApplication::applicationDirPath();
+    QString newExe = QDir(appDir).filePath("svl-connect.exe.new");
+    QString targetExe = QDir(appDir).filePath("svl-connect.exe");
+
+    if (QFile::exists(newExe) && QFile::exists(targetExe)) {
+        QString scriptPath = QDir(QDir::tempPath()).filePath("svl_launcher_update.bat");
+        QFile script(scriptPath);
+        if (script.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            QTextStream out(&script);
+            out << "@echo off\r\n";
+            out << "timeout /t 1 /nobreak >nul\r\n";
+            out << "copy /y \"" << QDir::toNativeSeparators(newExe) << "\" \"" << QDir::toNativeSeparators(targetExe) << "\" >nul\r\n";
+            out << "del \"" << QDir::toNativeSeparators(newExe) << "\" >nul\r\n";
+            out << "del \"%~f0\" >nul\r\n";
+            script.close();
+
+            qDebug() << "[SVLAutoUpdate] Triggering launcher self-update batch on exit:" << scriptPath;
+            QProcess::startDetached("cmd.exe", QStringList() << "/c" << scriptPath);
+        }
+    }
 }

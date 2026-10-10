@@ -467,6 +467,7 @@ void LaunchController::onSucceeded()
     // Two-way sync: read back any settings modified in-game
     if (m_instance) {
         SVLClientModsPage::syncInstanceToSettings(m_instance->gameRoot());
+        SVLClientModsPage::performPostGameAutoUpdate(m_instance->gameRoot());
     }
     emitSucceeded();
 }
@@ -476,6 +477,7 @@ void LaunchController::onFailed(QString reason)
     // Two-way sync: read back any settings modified in-game
     if (m_instance) {
         SVLClientModsPage::syncInstanceToSettings(m_instance->gameRoot());
+        SVLClientModsPage::performPostGameAutoUpdate(m_instance->gameRoot());
     }
     if (m_instance->settings()->get("ShowConsoleOnError").toBool()) {
         APPLICATION->showInstanceWindow(m_instance, "console");

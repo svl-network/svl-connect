@@ -338,11 +338,25 @@ void SVLModSyncTask::injectInbuiltClientMods()
     if (!hasModInManifest("sunveil-client") && !isExplicitlyRemovedByUser("sunveil-client", "sunveil-client-1.0.0.jar")) {
         QString bundledJar = QDir(QCoreApplication::applicationDirPath()).filePath("jars/sunveil-client-1.0.0.jar");
         QString targetPath = QDir(m_modsDirPath).filePath("sunveil-client-1.0.0.jar");
+        auto autoUpVal = APPLICATION->settings()->get("ClientMod_AutoUpdate");
+        bool autoUpdate = autoUpVal.isValid() ? autoUpVal.toBool() : true;
 
-        if (QFile::exists(bundledJar) && !QFile::exists(targetPath)) {
-            QDir(m_modsDirPath).mkpath(".");
-            QFile::copy(bundledJar, targetPath);
-            qDebug() << "[SVLModSync] Installed bundled official Sunveil Client mod:" << targetPath;
+        if (QFile::exists(bundledJar)) {
+            bool needCopy = !QFile::exists(targetPath);
+            if (!needCopy && autoUpdate) {
+                QFileInfo bInfo(bundledJar);
+                QFileInfo tInfo(targetPath);
+                if (bInfo.size() != tInfo.size() || bInfo.lastModified() > tInfo.lastModified()) {
+                    needCopy = true;
+                }
+            }
+            if (needCopy) {
+                QDir(m_modsDirPath).mkpath(".");
+                QFile::remove(targetPath);
+                if (QFile::copy(bundledJar, targetPath)) {
+                    qDebug() << "[SVLModSync] Updated bundled official Sunveil Client mod to latest version:" << targetPath;
+                }
+            }
         } else if (!QFile::exists(targetPath)) {
             SVLModEntry entry;
             entry.projectId = "sunveil-client";

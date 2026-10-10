@@ -26,11 +26,15 @@ public:
 
     static void syncSettingsToInstance(const QString& gameRoot);
     static void syncInstanceToSettings(const QString& gameRoot);
+    static void performPostGameAutoUpdate(const QString& gameRoot);
+    static void checkForLauncherUpdates();
+    static void applyPendingLauncherUpdateOnExit();
 
 private:
     void setupUI();
     QWidget* createModRow(const QString& title, const QString& description, const QString& settingKey, QCheckBox** outBox, const QString& badgeText = "CLIENT");
 
+    QCheckBox* m_autoUpdateCheck = nullptr;
     QCheckBox* m_altLookCheck = nullptr;
     QCheckBox* m_freecamCheck = nullptr;
     QCheckBox* m_minimapCheck = nullptr;
