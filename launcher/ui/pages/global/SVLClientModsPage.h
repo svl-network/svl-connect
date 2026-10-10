@@ -24,6 +24,9 @@ public:
     bool apply() override;
     void retranslate() override {}
 
+    static void syncSettingsToInstance(const QString& gameRoot);
+    static void syncInstanceToSettings(const QString& gameRoot);
+
 private:
     void setupUI();
     QWidget* createModRow(const QString& title, const QString& description, const QString& settingKey, QCheckBox** outBox, const QString& badgeText = "CLIENT");
@@ -34,4 +37,19 @@ private:
     QCheckBox* m_itemPhysicsCheck = nullptr;
     QCheckBox* m_fovZoomCheck = nullptr;
     QCheckBox* m_perfCheck = nullptr;
+    QCheckBox* m_emotesCheck = nullptr;
+    QCheckBox* m_cosmeticsCheck = nullptr;
+    QCheckBox* m_audioRadarCheck = nullptr;
+    QCheckBox* m_keystrokesCheck = nullptr;
+    QCheckBox* m_fullbrightCheck = nullptr;
+    QCheckBox* m_freelookDecoupleCheck = nullptr;
+    QCheckBox* m_lookNicknameCheck = nullptr;
+    QCheckBox* m_controlifyCheck = nullptr;
+    QCheckBox* m_waveyCapesCheck = nullptr;
+    QCheckBox* m_skinLayers3DCheck = nullptr;
+    QCheckBox* m_chatHeadsCheck = nullptr;
+    QCheckBox* m_tabHeadsCheck = nullptr;
+    QCheckBox* m_clumpsCheck = nullptr;
+    QCheckBox* m_shulkerTooltipCheck = nullptr;
+    QCheckBox* m_betterF3Check = nullptr;
 };

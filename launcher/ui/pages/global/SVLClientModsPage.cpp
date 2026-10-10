@@ -1,8 +1,15 @@
 #include "SVLClientModsPage.h"
 #include "settings/SettingsObject.h"
+#include "InstanceList.h"
+#include "minecraft/MinecraftInstance.h"
 
 #include <QScrollArea>
 #include <QStyle>
+#include <QFile>
+#include <QDir>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QFileInfo>
 
 SVLClientModsPage::SVLClientModsPage(QWidget* parent)
     : QWidget(parent)
@@ -12,6 +19,16 @@ SVLClientModsPage::SVLClientModsPage(QWidget* parent)
 
 void SVLClientModsPage::setupUI()
 {
+    // Two-way sync: Pull latest settings from active instance config if present
+    if (APPLICATION->instances()) {
+        for (int i = 0; i < APPLICATION->instances()->count(); ++i) {
+            auto* inst = APPLICATION->instances()->at(i);
+            if (inst) {
+                syncInstanceToSettings(inst->gameRoot());
+            }
+        }
+    }
+
     auto* rootLayout = new QVBoxLayout(this);
     rootLayout->setContentsMargins(0, 0, 0, 0);
 
@@ -30,7 +47,7 @@ void SVLClientModsPage::setupUI()
     headerTitle->setStyleSheet("color: #FFFFFF; font-size: 18px; font-weight: 800; border: none;");
     mainLayout->addWidget(headerTitle);
 
-    auto* headerSub = new QLabel(tr("Enable or disable built-in quality of life client enhancements. Note: If a server explicitly forbids a mod (e.g. Freecam or Minimap), Sunveil Connect will automatically disable it for that session to adhere to server rules."), container);
+    auto* headerSub = new QLabel(tr("Configure built-in enhancements before launch. Settings automatically synchronize two-way with the in-game client mod and update in real-time."), container);
     headerSub->setStyleSheet("color: #A1A1AA; font-size: 12px; line-height: 1.4; border: none;");
     headerSub->setWordWrap(true);
     mainLayout->addWidget(headerSub);
@@ -89,6 +106,131 @@ void SVLClientModsPage::setupUI()
         "ClientMod_Performance",
         &m_perfCheck,
         "PERFORMANCE"
+    ));
+
+    // 7. Emotes Suite (Emotecraft Integration)
+    mainLayout->addWidget(createModRow(
+        tr("Emote Studio (Emotecraft Suite)"),
+        tr("Dynamic full-body player animations (Wave, Dance, Clap, Bow, Sit, Point) synced with all Sunveil clients (Key B)."),
+        "ClientMod_Emotes",
+        &m_emotesCheck,
+        "ANIMATION"
+    ));
+
+    // 8. Ingame Merch & Cosmetics Shop
+    mainLayout->addWidget(createModRow(
+        tr("Ingame Merch & Cosmetics Shop"),
+        tr("Custom player capes, animated 3D hats, wings, and custom weapon models catalog with in-game purchasing and equipping."),
+        "ClientMod_Cosmetics",
+        &m_cosmeticsCheck,
+        "COSMETICS"
+    ));
+
+    // 9. 3D Audio Radar
+    mainLayout->addWidget(createModRow(
+        tr("3D Directional Audio Radar"),
+        tr("Real-time directional sound radar HUD overlay with frequency filtering for footstep and combat detection."),
+        "ClientMod_AudioRadar",
+        &m_audioRadarCheck,
+        "PVP"
+    ));
+
+    // 10. Keystrokes & CPS Overlay
+    mainLayout->addWidget(createModRow(
+        tr("Keystrokes & CPS Counter"),
+        tr("Displays real-time WASD keys, Spacebar, LMB, RMB, and clicks per second on screen."),
+        "ClientMod_Keystrokes",
+        &m_keystrokesCheck,
+        "HUD"
+    ));
+
+    // 11. Fullbright
+    mainLayout->addWidget(createModRow(
+        tr("Fullbright (Gamma Boost)"),
+        tr("Overrides cave and nighttime darkness with 100% crystal clear vision in all dimensions."),
+        "ClientMod_Fullbright",
+        &m_fullbrightCheck,
+        "VISUAL"
+    ));
+
+    mainLayout->addWidget(createModRow(
+        tr("Freelook: Decoupled Camera"),
+        tr("Free 360° camera orbit without rotating character body (walk straight while looking behind)."),
+        "ClientMod_FreelookDecouple",
+        &m_freelookDecoupleCheck,
+        "CAMERA"
+    ));
+
+    mainLayout->addWidget(createModRow(
+        tr("Look Nickname (Self Nametag)"),
+        tr("Renders your own nametag/nickname above your head in 3rd person (F5) and during freelook."),
+        "ClientMod_LookNickname",
+        &m_lookNicknameCheck,
+        "VISUAL"
+    ));
+
+    mainLayout->addWidget(createModRow(
+        tr("Controlify (Controller Support)"),
+        tr("Full gamepad & controller support for Xbox, PlayStation, Switch Pro and generic gamepads."),
+        "ClientMod_Controlify",
+        &m_controlifyCheck,
+        "INPUT"
+    ));
+
+    mainLayout->addWidget(createModRow(
+        tr("Wavey Capes"),
+        tr("Physics-based cloth simulation with undulating waves and dynamic wind animations for capes."),
+        "ClientMod_WaveyCapes",
+        &m_waveyCapesCheck,
+        "COSMETIC"
+    ));
+
+    mainLayout->addWidget(createModRow(
+        tr("3D Skin Layers"),
+        tr("Extrudes the second layer of player skins (hats, sleeves, jackets, pants) with 3D voxel depth."),
+        "ClientMod_3DSkinLayers",
+        &m_skinLayers3DCheck,
+        "VISUAL"
+    ));
+
+    mainLayout->addWidget(createModRow(
+        tr("Chat Heads"),
+        tr("Renders player skin head avatar icons next to chat messages in the chat HUD."),
+        "ClientMod_ChatHeads",
+        &m_chatHeadsCheck,
+        "HUD"
+    ));
+
+    mainLayout->addWidget(createModRow(
+        tr("TAB Heads"),
+        tr("Guarantees player avatar faces in the TAB player list across online and offline servers."),
+        "ClientMod_TABHeads",
+        &m_tabHeadsCheck,
+        "HUD"
+    ));
+
+    mainLayout->addWidget(createModRow(
+        tr("Clumps (XP Lag Fix)"),
+        tr("Clumps nearby experience orbs together to drastically reduce entity lag and boost FPS."),
+        "ClientMod_Clumps",
+        &m_clumpsCheck,
+        "PERF"
+    ));
+
+    mainLayout->addWidget(createModRow(
+        tr("Shulker Box Tooltip"),
+        tr("Interactive 3x9 grid tooltip preview showing all items inside shulker boxes on hover."),
+        "ClientMod_ShulkerTooltip",
+        &m_shulkerTooltipCheck,
+        "UTILITY"
+    ));
+
+    mainLayout->addWidget(createModRow(
+        tr("BetterF3"),
+        tr("Clean, categorized, and color-coded modern F3 debug HUD cards replacing cluttered vanilla text."),
+        "ClientMod_BetterF3",
+        &m_betterF3Check,
+        "HUD"
     ));
 
     mainLayout->addStretch();
@@ -151,5 +293,127 @@ bool SVLClientModsPage::apply()
     if (m_itemPhysicsCheck) APPLICATION->settings()->set("ClientMod_ItemPhysics", m_itemPhysicsCheck->isChecked());
     if (m_fovZoomCheck) APPLICATION->settings()->set("ClientMod_FovZoom", m_fovZoomCheck->isChecked());
     if (m_perfCheck) APPLICATION->settings()->set("ClientMod_Performance", m_perfCheck->isChecked());
+    if (m_emotesCheck) APPLICATION->settings()->set("ClientMod_Emotes", m_emotesCheck->isChecked());
+    if (m_cosmeticsCheck) APPLICATION->settings()->set("ClientMod_Cosmetics", m_cosmeticsCheck->isChecked());
+    if (m_audioRadarCheck) APPLICATION->settings()->set("ClientMod_AudioRadar", m_audioRadarCheck->isChecked());
+    if (m_keystrokesCheck) APPLICATION->settings()->set("ClientMod_Keystrokes", m_keystrokesCheck->isChecked());
+    if (m_fullbrightCheck) APPLICATION->settings()->set("ClientMod_Fullbright", m_fullbrightCheck->isChecked());
+    if (m_freelookDecoupleCheck) APPLICATION->settings()->set("ClientMod_FreelookDecouple", m_freelookDecoupleCheck->isChecked());
+    if (m_lookNicknameCheck) APPLICATION->settings()->set("ClientMod_LookNickname", m_lookNicknameCheck->isChecked());
+    if (m_controlifyCheck) APPLICATION->settings()->set("ClientMod_Controlify", m_controlifyCheck->isChecked());
+    if (m_waveyCapesCheck) APPLICATION->settings()->set("ClientMod_WaveyCapes", m_waveyCapesCheck->isChecked());
+    if (m_skinLayers3DCheck) APPLICATION->settings()->set("ClientMod_3DSkinLayers", m_skinLayers3DCheck->isChecked());
+    if (m_chatHeadsCheck) APPLICATION->settings()->set("ClientMod_ChatHeads", m_chatHeadsCheck->isChecked());
+    if (m_tabHeadsCheck) APPLICATION->settings()->set("ClientMod_TABHeads", m_tabHeadsCheck->isChecked());
+    if (m_clumpsCheck) APPLICATION->settings()->set("ClientMod_Clumps", m_clumpsCheck->isChecked());
+    if (m_shulkerTooltipCheck) APPLICATION->settings()->set("ClientMod_ShulkerTooltip", m_shulkerTooltipCheck->isChecked());
+    if (m_betterF3Check) APPLICATION->settings()->set("ClientMod_BetterF3", m_betterF3Check->isChecked());
+
+    // Two-way synchronization: Propagate launcher settings into all instance configs
+    if (APPLICATION->instances()) {
+        for (int i = 0; i < APPLICATION->instances()->count(); ++i) {
+            auto* inst = APPLICATION->instances()->at(i);
+            if (inst) {
+                syncSettingsToInstance(inst->gameRoot());
+            }
+        }
+    }
     return true;
+}
+
+void SVLClientModsPage::syncSettingsToInstance(const QString& gameRoot)
+{
+    if (gameRoot.isEmpty()) return;
+    QString configPath = QDir(gameRoot).filePath("config/sunveil-client.json");
+    QFileInfo fi(configPath);
+    fi.dir().mkpath(".");
+
+    QJsonObject rootObj;
+    QFile file(configPath);
+    if (file.open(QIODevice::ReadOnly)) {
+        rootObj = QJsonDocument::fromJson(file.readAll()).object();
+        file.close();
+    }
+
+    QJsonObject modules = rootObj["modules"].toObject();
+    auto settings = APPLICATION->settings();
+    modules["perspective"] = settings->get("ClientMod_AltLook").toBool();
+    modules["freecam"] = settings->get("ClientMod_Freecam").toBool();
+    modules["waypoints"] = settings->get("ClientMod_Minimap").toBool();
+    modules["itemPhysic"] = settings->get("ClientMod_ItemPhysics").toBool();
+    modules["zoom"] = settings->get("ClientMod_FovZoom").toBool();
+    modules["fps"] = settings->get("ClientMod_Performance").toBool();
+    modules["emotes"] = settings->get("ClientMod_Emotes").toBool();
+    modules["cosmetics"] = settings->get("ClientMod_Cosmetics").toBool();
+    modules["audioRadar"] = settings->get("ClientMod_AudioRadar").toBool();
+    modules["keystrokes"] = settings->get("ClientMod_Keystrokes").toBool();
+    modules["brightness"] = settings->get("ClientMod_Fullbright").toBool();
+    modules["freelookDecouple"] = settings->get("ClientMod_FreelookDecouple").toBool();
+    modules["lookNickname"] = settings->get("ClientMod_LookNickname").toBool();
+    modules["controlify"] = settings->get("ClientMod_Controlify").toBool();
+    modules["waveyCapes"] = settings->get("ClientMod_WaveyCapes").toBool();
+    modules["skinLayers3D"] = settings->get("ClientMod_3DSkinLayers").toBool();
+    modules["chatHeads"] = settings->get("ClientMod_ChatHeads").toBool();
+    modules["tabHeads"] = settings->get("ClientMod_TABHeads").toBool();
+    modules["clumps"] = settings->get("ClientMod_Clumps").toBool();
+    modules["shulkerBoxTooltip"] = settings->get("ClientMod_ShulkerTooltip").toBool();
+    modules["betterF3"] = settings->get("ClientMod_BetterF3").toBool();
+
+    rootObj["modules"] = modules;
+    rootObj["enableCapes"] = settings->get("ClientMod_Cosmetics").toBool();
+    rootObj["freelookDecouple"] = settings->get("ClientMod_FreelookDecouple").toBool();
+    rootObj["lookNickname"] = settings->get("ClientMod_LookNickname").toBool();
+    rootObj["controlify"] = settings->get("ClientMod_Controlify").toBool();
+    rootObj["waveyCapes"] = settings->get("ClientMod_WaveyCapes").toBool();
+    rootObj["skinLayers3D"] = settings->get("ClientMod_3DSkinLayers").toBool();
+    rootObj["chatHeads"] = settings->get("ClientMod_ChatHeads").toBool();
+    rootObj["tabHeads"] = settings->get("ClientMod_TABHeads").toBool();
+    rootObj["clumps"] = settings->get("ClientMod_Clumps").toBool();
+    rootObj["shulkerBoxTooltip"] = settings->get("ClientMod_ShulkerTooltip").toBool();
+    rootObj["betterF3"] = settings->get("ClientMod_BetterF3").toBool();
+
+    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        file.write(QJsonDocument(rootObj).toJson(QJsonDocument::Indented));
+        file.close();
+    }
+}
+
+void SVLClientModsPage::syncInstanceToSettings(const QString& gameRoot)
+{
+    if (gameRoot.isEmpty()) return;
+    QString configPath = QDir(gameRoot).filePath("config/sunveil-client.json");
+    QFile file(configPath);
+    if (!file.open(QIODevice::ReadOnly)) return;
+
+    QJsonObject rootObj = QJsonDocument::fromJson(file.readAll()).object();
+    file.close();
+
+    if (!rootObj.contains("modules")) return;
+    QJsonObject modules = rootObj["modules"].toObject();
+    auto settings = APPLICATION->settings();
+
+    if (modules.contains("perspective")) settings->set("ClientMod_AltLook", modules["perspective"].toBool());
+    if (modules.contains("freecam")) settings->set("ClientMod_Freecam", modules["freecam"].toBool());
+    if (modules.contains("waypoints")) settings->set("ClientMod_Minimap", modules["waypoints"].toBool());
+    if (modules.contains("itemPhysic")) settings->set("ClientMod_ItemPhysics", modules["itemPhysic"].toBool());
+    if (modules.contains("zoom")) settings->set("ClientMod_FovZoom", modules["zoom"].toBool());
+    if (modules.contains("fps")) settings->set("ClientMod_Performance", modules["fps"].toBool());
+    if (modules.contains("emotes")) settings->set("ClientMod_Emotes", modules["emotes"].toBool());
+    if (modules.contains("cosmetics")) settings->set("ClientMod_Cosmetics", modules["cosmetics"].toBool());
+    if (modules.contains("audioRadar")) settings->set("ClientMod_AudioRadar", modules["audioRadar"].toBool());
+    if (modules.contains("keystrokes")) settings->set("ClientMod_Keystrokes", modules["keystrokes"].toBool());
+    if (modules.contains("brightness")) settings->set("ClientMod_Fullbright", modules["brightness"].toBool());
+    if (modules.contains("freelookDecouple")) settings->set("ClientMod_FreelookDecouple", modules["freelookDecouple"].toBool());
+    if (modules.contains("lookNickname")) settings->set("ClientMod_LookNickname", modules["lookNickname"].toBool());
+    if (modules.contains("controlify")) settings->set("ClientMod_Controlify", modules["controlify"].toBool());
+    if (modules.contains("waveyCapes")) settings->set("ClientMod_WaveyCapes", modules["waveyCapes"].toBool());
+    if (modules.contains("skinLayers3D")) settings->set("ClientMod_3DSkinLayers", modules["skinLayers3D"].toBool());
+    if (modules.contains("chatHeads")) settings->set("ClientMod_ChatHeads", modules["chatHeads"].toBool());
+    if (modules.contains("tabHeads")) settings->set("ClientMod_TABHeads", modules["tabHeads"].toBool());
+    if (modules.contains("clumps")) settings->set("ClientMod_Clumps", modules["clumps"].toBool());
+    if (modules.contains("shulkerBoxTooltip")) settings->set("ClientMod_ShulkerTooltip", modules["shulkerBoxTooltip"].toBool());
+    if (modules.contains("betterF3")) settings->set("ClientMod_BetterF3", modules["betterF3"].toBool());
+
+    if (rootObj.contains("freelookDecouple")) settings->set("ClientMod_FreelookDecouple", rootObj["freelookDecouple"].toBool());
+    if (rootObj.contains("lookNickname")) settings->set("ClientMod_LookNickname", rootObj["lookNickname"].toBool());
 }

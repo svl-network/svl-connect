@@ -58,6 +58,7 @@
 #include "launch/steps/TextPrint.h"
 #include "tasks/Task.h"
 #include "ui/dialogs/ChooseOfflineNameDialog.h"
+#include "ui/pages/global/SVLClientModsPage.h"
 
 LaunchController::LaunchController() = default;
 
@@ -376,6 +377,9 @@ void LaunchController::launchInstance()
         return;
     }
 
+    // Two-way sync: write latest launcher settings into the instance's config/sunveil-client.json before launching
+    SVLClientModsPage::syncSettingsToInstance(m_instance->gameRoot());
+
     m_launcher = m_instance->createLaunchTask(m_session, m_targetToJoin);
     if (!m_launcher) {
         emitFailed(tr("Couldn't instantiate a launcher."));
@@ -460,11 +464,19 @@ void LaunchController::readyForLaunch()
 
 void LaunchController::onSucceeded()
 {
+    // Two-way sync: read back any settings modified in-game
+    if (m_instance) {
+        SVLClientModsPage::syncInstanceToSettings(m_instance->gameRoot());
+    }
     emitSucceeded();
 }
 
 void LaunchController::onFailed(QString reason)
 {
+    // Two-way sync: read back any settings modified in-game
+    if (m_instance) {
+        SVLClientModsPage::syncInstanceToSettings(m_instance->gameRoot());
+    }
     if (m_instance->settings()->get("ShowConsoleOnError").toBool()) {
         APPLICATION->showInstanceWindow(m_instance, "console");
     }

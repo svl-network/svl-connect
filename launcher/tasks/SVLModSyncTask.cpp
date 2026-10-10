@@ -416,7 +416,7 @@ void SVLModSyncTask::injectInbuiltClientMods()
     bool hasFabricOrQuiltMods = isModPresentInFolder("fabric") || isModPresentInFolder("quilt") || needFabricApi;
     bool hybridEnabled = m_instance->settings()->get("HybridLoadingEnabled").toBool();
 
-    if (hybridEnabled) {
+    if (hybridEnabled && (hasForgeOrNeoForge || hasFabricOrQuiltMods)) {
         qDebug() << "[SVLModSync] Dynamic Multi-Loader Compatibility active.";
         m_instance->settings()->set("HybridLoadingActive", true);
 

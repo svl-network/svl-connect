@@ -915,6 +915,11 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
         m_settings->registerSetting("ClientMod_ItemPhysics", true);
         m_settings->registerSetting("ClientMod_FovZoom", true);
         m_settings->registerSetting("ClientMod_Performance", true);
+        m_settings->registerSetting("ClientMod_Emotes", true);
+        m_settings->registerSetting("ClientMod_Cosmetics", true);
+        m_settings->registerSetting("ClientMod_AudioRadar", true);
+        m_settings->registerSetting("ClientMod_Keystrokes", true);
+        m_settings->registerSetting("ClientMod_Fullbright", false);
 
         // Init page provider
         {

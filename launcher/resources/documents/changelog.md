@@ -2,6 +2,7 @@
 
 ### Live Commit History (main branch)
 
+* **feat: add login wizard UI, launch controller, and mod sync task while updating launcher patch version** `(b11083585)` - *HeyTaxx*, 2026-10-09
 * **Security Policy: Transmit version header and prevent dismissal of mandatory update overlays** `(7274f14ae)` - *HeyTaxx*, 2026-10-04
 * **Security Hardening: Enforce HTTPS, strict .jar/.zip extension checks, and path traversal guards on mod sync** `(7a371d244)` - *HeyTaxx*, 2026-10-04
 * **chore: untrack precompiled binaries in dist and release-dist** `(e948de947)` - *HeyTaxx*, 2026-10-04
@@ -31,7 +32,6 @@
 * **docs: add ko-fi support button to README** `(4d6bdc7e7)` - *HeyTaxx*, 2026-09-06
 * **feat: implement modular legacy launcher support with online mode fixes and utility libraries** `(746961483)` - *HeyTaxx*, 2026-09-05
 * **docs: add project changelog and remove obsolete documentation file** `(9f243f797)` - *HeyTaxx*, 2026-08-29
-* **feat: implement SVLConnectPage to display and manage server connections via remote API** `(53fc40c25)` - *HeyTaxx*, 2026-08-29
 
 ---
 *Compiled directly from repository source tree.*
