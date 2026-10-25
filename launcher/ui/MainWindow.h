@@ -62,6 +62,11 @@ class InstanceTask;
 class Setting;
 class SVLConnectPage;
 class SVLRealmDetailPage;
+class SVLSocialOverlay;
+class SVLFriendManager;
+class SVLHostingManager;
+class SVLWardrobeManager;
+class SVLWardrobePage;
 struct SVLServerModel;
 class QStackedWidget;
 
@@ -88,6 +93,10 @@ class MainWindow : public QMainWindow {
     void showServersView();
     void showRealmDetails(const SVLServerModel& server);
     void showInstancesView();
+    void showSocialView();
+    void showWardrobeView();
+    void openMultiplayerHostDialog();
+    void joinFriendSession(const QString& address, quint16 port);
     void launchSVLServer(MinecraftInstance* instance, const QString& ip, quint16 port);
     void onGameSessionEnded();
     void onUpdateAvailable(const QString& newVersion, bool isMandatory, const QString& downloadUrl, const QString& changelog);
@@ -239,9 +248,17 @@ class MainWindow : public QMainWindow {
     // these are managed by Qt's memory management model!
     SVLConnectPage* m_svlConnectPage = nullptr;
     SVLRealmDetailPage* m_realmDetailPage = nullptr;
+    SVLSocialOverlay* m_socialOverlay = nullptr;
+    SVLFriendManager* m_friendManager = nullptr;
+    SVLHostingManager* m_hostingManager = nullptr;
+    SVLWardrobeManager* m_wardrobeManager = nullptr;
+    SVLWardrobePage* m_wardrobePage = nullptr;
     QStackedWidget* m_centralStack = nullptr;
     QAction* actionShowServers = nullptr;
     QAction* actionShowInstances = nullptr;
+    QAction* actionShowSocial = nullptr;
+    QAction* actionShowWardrobe = nullptr;
+    QAction* actionHostMultiplayer = nullptr;
 
     InstanceView* view = nullptr;
     InstanceProxyModel* proxymodel = nullptr;

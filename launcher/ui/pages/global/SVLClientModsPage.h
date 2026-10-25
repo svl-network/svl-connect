@@ -25,6 +25,7 @@ public:
     void retranslate() override {}
 
     static void syncSettingsToInstance(const QString& gameRoot);
+    static void syncSettingsToAllInstances();
     static void syncInstanceToSettings(const QString& gameRoot);
     static void performPostGameAutoUpdate(const QString& gameRoot);
     static void checkForLauncherUpdates();

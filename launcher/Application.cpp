@@ -910,6 +910,7 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
         m_settings->registerSetting("TechnicClientID", "");
 
         // Sunveil Inbuilt Client Mods Suite
+        m_settings->registerSetting("ClientMod_AutoUpdate", true);
         m_settings->registerSetting("ClientMod_AltLook", true);
         m_settings->registerSetting("ClientMod_Freecam", false);
         m_settings->registerSetting("ClientMod_Minimap", true);
@@ -921,6 +922,16 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
         m_settings->registerSetting("ClientMod_AudioRadar", true);
         m_settings->registerSetting("ClientMod_Keystrokes", true);
         m_settings->registerSetting("ClientMod_Fullbright", false);
+        m_settings->registerSetting("ClientMod_FreelookDecouple", true);
+        m_settings->registerSetting("ClientMod_LookNickname", true);
+        m_settings->registerSetting("ClientMod_Controlify", true);
+        m_settings->registerSetting("ClientMod_WaveyCapes", true);
+        m_settings->registerSetting("ClientMod_3DSkinLayers", true);
+        m_settings->registerSetting("ClientMod_ChatHeads", true);
+        m_settings->registerSetting("ClientMod_TABHeads", true);
+        m_settings->registerSetting("ClientMod_Clumps", true);
+        m_settings->registerSetting("ClientMod_ShulkerTooltip", true);
+        m_settings->registerSetting("ClientMod_BetterF3", true);
 
         // Init page provider
         {

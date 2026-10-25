@@ -59,6 +59,7 @@
 #include "tasks/Task.h"
 #include "ui/dialogs/ChooseOfflineNameDialog.h"
 #include "ui/pages/global/SVLClientModsPage.h"
+#include "ui/pages/svl/SVLWardrobeManager.h"
 
 LaunchController::LaunchController() = default;
 
@@ -380,6 +381,19 @@ void LaunchController::launchInstance()
     // Two-way sync: write latest launcher settings into the instance's config/sunveil-client.json before launching
     SVLClientModsPage::syncSettingsToInstance(m_instance->gameRoot());
 
+    // Sync wardrobe & custom capes before launch
+    {
+        WardrobeProfile profile;
+        auto s = APPLICATION->settings();
+        profile.activeCapeId = s->get("SVL_SelectedCape").toString();
+        if (profile.activeCapeId.isEmpty()) profile.activeCapeId = "solar_emerald";
+        profile.enableCapes = s->get("SVL_EnableCapes").toBool();
+        profile.waveyCapes = s->get("SVL_WaveyCapes").toBool();
+        profile.skinLayers3D = s->get("SVL_SkinLayers3D").toBool();
+        profile.customCapeUrl = s->get("SVL_CustomCapeUrl").toString();
+        SVLWardrobeManager::applyCosmeticsToInstance(m_instance, profile);
+    }
+
     m_launcher = m_instance->createLaunchTask(m_session, m_targetToJoin);
     if (!m_launcher) {
         emitFailed(tr("Couldn't instantiate a launcher."));
@@ -464,9 +478,10 @@ void LaunchController::readyForLaunch()
 
 void LaunchController::onSucceeded()
 {
-    // Two-way sync: read back any settings modified in-game
+    // Two-way sync: read back any settings modified in-game and propagate across all instances
     if (m_instance) {
         SVLClientModsPage::syncInstanceToSettings(m_instance->gameRoot());
+        SVLClientModsPage::syncSettingsToAllInstances();
         SVLClientModsPage::performPostGameAutoUpdate(m_instance->gameRoot());
     }
     emitSucceeded();
@@ -474,9 +489,10 @@ void LaunchController::onSucceeded()
 
 void LaunchController::onFailed(QString reason)
 {
-    // Two-way sync: read back any settings modified in-game
+    // Two-way sync: read back any settings modified in-game and propagate across all instances
     if (m_instance) {
         SVLClientModsPage::syncInstanceToSettings(m_instance->gameRoot());
+        SVLClientModsPage::syncSettingsToAllInstances();
         SVLClientModsPage::performPostGameAutoUpdate(m_instance->gameRoot());
     }
     if (m_instance->settings()->get("ShowConsoleOnError").toBool()) {

@@ -2,6 +2,7 @@
 
 ### Live Commit History (main branch)
 
+* **feat(autoupdate): implement automatic background updates on game and launcher exit, with settings toggle** `(4ed22d7e0)` - *HeyTaxx*, 2026-10-10
 * **feat: Inbuilt Client Mods Two-Way Sync (Emotes, Cosmetics, Freelook Decouple, Look Nickname, Controlify, Wavey Capes, 3D Skin Layers, Chat & TAB Heads, Clumps, Shulker Tooltip, BetterF3)** `(ddf376a9e)` - *HeyTaxx*, 2026-10-10
 * **feat: add login wizard UI, launch controller, and mod sync task while updating launcher patch version** `(b11083585)` - *HeyTaxx*, 2026-10-09
 * **Security Policy: Transmit version header and prevent dismissal of mandatory update overlays** `(7274f14ae)` - *HeyTaxx*, 2026-10-04
@@ -31,7 +32,6 @@
 * **feat: implement MMCZip utility and integrate SVLConnect pages into MainWindow** `(23b189354)` - *HeyTaxx*, 2026-09-06
 * **feat: implement SVLConnectPage for server browsing and mod synchronization management** `(8e0ae3118)` - *HeyTaxx*, 2026-09-06
 * **docs: add ko-fi support button to README** `(4d6bdc7e7)` - *HeyTaxx*, 2026-09-06
-* **feat: implement modular legacy launcher support with online mode fixes and utility libraries** `(746961483)` - *HeyTaxx*, 2026-09-05
 
 ---
 *Compiled directly from repository source tree.*

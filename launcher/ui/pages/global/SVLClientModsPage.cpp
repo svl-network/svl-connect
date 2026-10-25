@@ -25,13 +25,23 @@ SVLClientModsPage::SVLClientModsPage(QWidget* parent)
 
 void SVLClientModsPage::setupUI()
 {
-    // Two-way sync: Pull latest settings from active instance config if present
+    // Two-way sync: Pull latest settings from the most recently active instance config
     if (APPLICATION->instances()) {
+        QString mostRecentGameRoot;
+        QDateTime mostRecentTime;
         for (int i = 0; i < APPLICATION->instances()->count(); ++i) {
             auto* inst = APPLICATION->instances()->at(i);
             if (inst) {
-                syncInstanceToSettings(inst->gameRoot());
+                QString cfg = QDir(inst->gameRoot()).filePath("config/sunveil-client.json");
+                QFileInfo fi(cfg);
+                if (fi.exists() && (!mostRecentTime.isValid() || fi.lastModified() > mostRecentTime)) {
+                    mostRecentTime = fi.lastModified();
+                    mostRecentGameRoot = inst->gameRoot();
+                }
             }
+        }
+        if (!mostRecentGameRoot.isEmpty()) {
+            syncInstanceToSettings(mostRecentGameRoot);
         }
     }
 
@@ -329,6 +339,12 @@ bool SVLClientModsPage::apply()
     if (m_betterF3Check) APPLICATION->settings()->set("ClientMod_BetterF3", m_betterF3Check->isChecked());
 
     // Two-way synchronization: Propagate launcher settings into all instance configs
+    syncSettingsToAllInstances();
+    return true;
+}
+
+void SVLClientModsPage::syncSettingsToAllInstances()
+{
     if (APPLICATION->instances()) {
         for (int i = 0; i < APPLICATION->instances()->count(); ++i) {
             auto* inst = APPLICATION->instances()->at(i);
@@ -337,7 +353,6 @@ bool SVLClientModsPage::apply()
             }
         }
     }
-    return true;
 }
 
 void SVLClientModsPage::syncSettingsToInstance(const QString& gameRoot)
@@ -414,35 +429,42 @@ void SVLClientModsPage::syncInstanceToSettings(const QString& gameRoot)
         bool autoUp = rootObj["autoUpdate"].toBool();
         settings->set("ClientMod_AutoUpdate", autoUp);
         settings->set("AutoUpdateClient", autoUp);
+    } else if (rootObj.contains("modules") && rootObj["modules"].toObject().contains("autoUpdate")) {
+        bool autoUp = rootObj["modules"].toObject()["autoUpdate"].toBool();
+        settings->set("ClientMod_AutoUpdate", autoUp);
+        settings->set("AutoUpdateClient", autoUp);
     }
 
-    if (!rootObj.contains("modules")) return;
     QJsonObject modules = rootObj["modules"].toObject();
+    auto syncMod = [&](const QString& settingKey, const QString& modKey) {
+        if (modules.contains(modKey)) {
+            settings->set(settingKey, modules[modKey].toBool());
+        } else if (rootObj.contains(modKey)) {
+            settings->set(settingKey, rootObj[modKey].toBool());
+        }
+    };
 
-    if (modules.contains("perspective")) settings->set("ClientMod_AltLook", modules["perspective"].toBool());
-    if (modules.contains("freecam")) settings->set("ClientMod_Freecam", modules["freecam"].toBool());
-    if (modules.contains("waypoints")) settings->set("ClientMod_Minimap", modules["waypoints"].toBool());
-    if (modules.contains("itemPhysic")) settings->set("ClientMod_ItemPhysics", modules["itemPhysic"].toBool());
-    if (modules.contains("zoom")) settings->set("ClientMod_FovZoom", modules["zoom"].toBool());
-    if (modules.contains("fps")) settings->set("ClientMod_Performance", modules["fps"].toBool());
-    if (modules.contains("emotes")) settings->set("ClientMod_Emotes", modules["emotes"].toBool());
-    if (modules.contains("cosmetics")) settings->set("ClientMod_Cosmetics", modules["cosmetics"].toBool());
-    if (modules.contains("audioRadar")) settings->set("ClientMod_AudioRadar", modules["audioRadar"].toBool());
-    if (modules.contains("keystrokes")) settings->set("ClientMod_Keystrokes", modules["keystrokes"].toBool());
-    if (modules.contains("brightness")) settings->set("ClientMod_Fullbright", modules["brightness"].toBool());
-    if (modules.contains("freelookDecouple")) settings->set("ClientMod_FreelookDecouple", modules["freelookDecouple"].toBool());
-    if (modules.contains("lookNickname")) settings->set("ClientMod_LookNickname", modules["lookNickname"].toBool());
-    if (modules.contains("controlify")) settings->set("ClientMod_Controlify", modules["controlify"].toBool());
-    if (modules.contains("waveyCapes")) settings->set("ClientMod_WaveyCapes", modules["waveyCapes"].toBool());
-    if (modules.contains("skinLayers3D")) settings->set("ClientMod_3DSkinLayers", modules["skinLayers3D"].toBool());
-    if (modules.contains("chatHeads")) settings->set("ClientMod_ChatHeads", modules["chatHeads"].toBool());
-    if (modules.contains("tabHeads")) settings->set("ClientMod_TABHeads", modules["tabHeads"].toBool());
-    if (modules.contains("clumps")) settings->set("ClientMod_Clumps", modules["clumps"].toBool());
-    if (modules.contains("shulkerBoxTooltip")) settings->set("ClientMod_ShulkerTooltip", modules["shulkerBoxTooltip"].toBool());
-    if (modules.contains("betterF3")) settings->set("ClientMod_BetterF3", modules["betterF3"].toBool());
-
-    if (rootObj.contains("freelookDecouple")) settings->set("ClientMod_FreelookDecouple", rootObj["freelookDecouple"].toBool());
-    if (rootObj.contains("lookNickname")) settings->set("ClientMod_LookNickname", rootObj["lookNickname"].toBool());
+    syncMod("ClientMod_AltLook", "perspective");
+    syncMod("ClientMod_Freecam", "freecam");
+    syncMod("ClientMod_Minimap", "waypoints");
+    syncMod("ClientMod_ItemPhysics", "itemPhysic");
+    syncMod("ClientMod_FovZoom", "zoom");
+    syncMod("ClientMod_Performance", "fps");
+    syncMod("ClientMod_Emotes", "emotes");
+    syncMod("ClientMod_Cosmetics", "cosmetics");
+    syncMod("ClientMod_AudioRadar", "audioRadar");
+    syncMod("ClientMod_Keystrokes", "keystrokes");
+    syncMod("ClientMod_Fullbright", "brightness");
+    syncMod("ClientMod_FreelookDecouple", "freelookDecouple");
+    syncMod("ClientMod_LookNickname", "lookNickname");
+    syncMod("ClientMod_Controlify", "controlify");
+    syncMod("ClientMod_WaveyCapes", "waveyCapes");
+    syncMod("ClientMod_3DSkinLayers", "skinLayers3D");
+    syncMod("ClientMod_ChatHeads", "chatHeads");
+    syncMod("ClientMod_TABHeads", "tabHeads");
+    syncMod("ClientMod_Clumps", "clumps");
+    syncMod("ClientMod_ShulkerTooltip", "shulkerBoxTooltip");
+    syncMod("ClientMod_BetterF3", "betterF3");
 }
 
 void SVLClientModsPage::performPostGameAutoUpdate(const QString& gameRoot)
@@ -472,45 +494,41 @@ void SVLClientModsPage::performPostGameAutoUpdate(const QString& gameRoot)
 
     // 2. Fetch latest client mod & launcher update in the background
     QTimer::singleShot(200, [gameRoot, appDir]() {
-        auto* netMgr = new QNetworkAccessManager();
-        QUrl jarUrl("https://realms.sunveil.net/downloads/sunveil-client-1.0.0.jar");
-        QNetworkRequest req(jarUrl);
-        req.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+        QString bundledJar = QDir(appDir).filePath("jars/sunveil-client-1.0.0.jar");
+        if (!QFile::exists(bundledJar)) {
+            auto* netMgr = new QNetworkAccessManager();
+            QUrl jarUrl("https://realms.sunveil.net/downloads/sunveil-client-1.0.0.jar");
+            QNetworkRequest req(jarUrl);
+            req.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
 
-        auto* reply = netMgr->get(req);
-        QObject::connect(reply, &QNetworkReply::finished, [reply, netMgr, gameRoot, appDir]() {
-            reply->deleteLater();
-            netMgr->deleteLater();
-            if (reply->error() == QNetworkReply::NoError) {
-                QByteArray data = reply->readAll();
-                if (data.size() > 50000) {
-                    QString bundledJar = QDir(appDir).filePath("jars/sunveil-client-1.0.0.jar");
-                    QDir(appDir).mkpath("jars");
-                    QFileInfo bInfo(bundledJar);
-                    if (!bInfo.exists() || bInfo.size() != data.size()) {
-                        QFile f(bundledJar);
+            auto* reply = netMgr->get(req);
+            QObject::connect(reply, &QNetworkReply::finished, [reply, netMgr, gameRoot, appDir]() {
+                reply->deleteLater();
+                netMgr->deleteLater();
+                if (reply->error() == QNetworkReply::NoError) {
+                    QByteArray data = reply->readAll();
+                    if (data.size() > 50000) {
+                        QString bJar = QDir(appDir).filePath("jars/sunveil-client-1.0.0.jar");
+                        QDir(appDir).mkpath("jars");
+                        QFile f(bJar);
                         if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
                             f.write(data);
                             f.close();
-                            qDebug() << "[SVLAutoUpdate] Updated bundled jar:" << data.size() << "bytes";
+                            qDebug() << "[SVLAutoUpdate] Downloaded bundled jar:" << data.size() << "bytes";
                         }
-                    }
-                    if (!gameRoot.isEmpty()) {
-                        QString targetMod = QDir(gameRoot).filePath("mods/sunveil-client-1.0.0.jar");
-                        QFileInfo tInfo(targetMod);
-                        if (!tInfo.exists() || tInfo.size() != data.size()) {
+                        if (!gameRoot.isEmpty()) {
+                            QString targetMod = QDir(gameRoot).filePath("mods/sunveil-client-1.0.0.jar");
                             QDir(gameRoot).mkpath("mods");
-                            QFile f(targetMod);
-                            if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-                                f.write(data);
-                                f.close();
-                                qDebug() << "[SVLAutoUpdate] Updated instance client mod:" << data.size() << "bytes";
+                            QFile fTarget(targetMod);
+                            if (fTarget.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+                                fTarget.write(data);
+                                fTarget.close();
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
 
         checkForLauncherUpdates();
     });

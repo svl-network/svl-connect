@@ -46,6 +46,13 @@
 #include "ui_MainWindow.h"
 #include "ui/pages/svl/SVLConnectPage.h"
 #include "ui/pages/svl/SVLRealmDetailPage.h"
+#include "ui/pages/svl/SVLHostingManager.h"
+#include "ui/pages/svl/SVLFriendManager.h"
+#include "ui/pages/svl/SVLSocialOverlay.h"
+#include "ui/pages/svl/SVLWardrobeManager.h"
+#include "ui/pages/svl/SVLWardrobePage.h"
+#include "ui/dialogs/SVLMultiplayerHostDialog.h"
+#include "tasks/SVLBridgeInjector.h"
 
 #include <QStackedWidget>
 #include <QDir>
@@ -349,14 +356,25 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
         m_svlConnectPage = new SVLConnectPage(this);
         m_realmDetailPage = new SVLRealmDetailPage(this);
 
+        // Sunveil Multiplayer, Social & Wardrobe Managers
+        m_hostingManager = new SVLHostingManager(APPLICATION->network(), this);
+        m_friendManager = new SVLFriendManager(APPLICATION->network(), this);
+        m_wardrobeManager = new SVLWardrobeManager(APPLICATION->network(), this);
+
+        m_socialOverlay = new SVLSocialOverlay(m_friendManager, this);
+        m_wardrobePage = new SVLWardrobePage(m_wardrobeManager, this);
+
         connect(m_svlConnectPage, &SVLConnectPage::launchRequested, this, &MainWindow::launchSVLServer);
         connect(m_svlConnectPage, &SVLConnectPage::serverDetailsRequested, this, &MainWindow::showRealmDetails);
         connect(m_realmDetailPage, &SVLRealmDetailPage::backRequested, this, &MainWindow::showServersView);
         connect(m_realmDetailPage, &SVLRealmDetailPage::connectRequested, m_svlConnectPage, &SVLConnectPage::launchServer);
+        connect(m_socialOverlay, &SVLSocialOverlay::joinRequested, this, &MainWindow::joinFriendSession);
 
         m_centralStack->addWidget(m_svlConnectPage);
         m_centralStack->addWidget(m_realmDetailPage);
         m_centralStack->addWidget(view);
+        m_centralStack->addWidget(m_socialOverlay);
+        m_centralStack->addWidget(m_wardrobePage);
         m_centralStack->setCurrentWidget(m_svlConnectPage);
 
         ui->horizontalLayout->addWidget(m_centralStack);
@@ -368,12 +386,21 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
         actionShowInstances = new QAction(QIcon::fromTheme("instances", QIcon(":/icons/pe_dark/scalable/instances.svg")), tr("Instances"), this);
         actionShowInstances->setCheckable(true);
 
+        actionShowSocial = new QAction(QIcon::fromTheme("user", QIcon(":/icons/pe_dark/scalable/accounts.svg")), tr("Social & Friends"), this);
+        actionShowSocial->setCheckable(true);
+
+        // Wardrobe and Host World features are now inbuilt in-game in the client suite
+        actionShowWardrobe = nullptr;
+        actionHostMultiplayer = nullptr;
+
         auto* navGroup = new QActionGroup(this);
         navGroup->addAction(actionShowServers);
         navGroup->addAction(actionShowInstances);
+        navGroup->addAction(actionShowSocial);
 
         connect(actionShowServers, &QAction::triggered, this, &MainWindow::showServersView);
         connect(actionShowInstances, &QAction::triggered, this, &MainWindow::showInstancesView);
+        connect(actionShowSocial, &QAction::triggered, this, &MainWindow::showSocialView);
 
         ui->mainToolBar->setMovable(false);
         ui->mainToolBar->setFloatable(false);
@@ -382,7 +409,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
 
         ui->mainToolBar->insertAction(ui->actionAddInstance, actionShowServers);
         ui->mainToolBar->insertAction(ui->actionAddInstance, actionShowInstances);
+        ui->mainToolBar->insertAction(ui->actionAddInstance, actionShowSocial);
         ui->mainToolBar->removeAction(ui->actionAddInstance);
+
+        // Start background friend status polling
+        m_friendManager->startPolling(15000);
     }
 
     // Togglable status bar
@@ -816,8 +847,10 @@ void MainWindow::defaultAccountChanged()
 
     MinecraftAccountPtr account = APPLICATION->accounts()->defaultAccount();
 
-    // FIXME: this needs adjustment for MSA
     if (account && account->profileName() != "") {
+        if (m_friendManager) {
+            m_friendManager->setMyUsername(account->profileName());
+        }
         auto profileLabel = profileInUseFilter(account->displayName(), account->isInUse());
         ui->actionAccountsButton->setText(profileLabel);
         auto face = account->getFace();
@@ -1832,6 +1865,8 @@ void MainWindow::showServersView()
 {
     if (actionShowServers) actionShowServers->setChecked(true);
     if (actionShowInstances) actionShowInstances->setChecked(false);
+    if (actionShowSocial) actionShowSocial->setChecked(false);
+    if (actionShowWardrobe) actionShowWardrobe->setChecked(false);
     if (m_centralStack && m_svlConnectPage) {
         m_centralStack->setCurrentWidget(m_svlConnectPage);
         m_svlConnectPage->refreshServers();
@@ -1845,6 +1880,8 @@ void MainWindow::showRealmDetails(const SVLServerModel& server)
 {
     if (actionShowServers) actionShowServers->setChecked(true);
     if (actionShowInstances) actionShowInstances->setChecked(false);
+    if (actionShowSocial) actionShowSocial->setChecked(false);
+    if (actionShowWardrobe) actionShowWardrobe->setChecked(false);
     if (m_centralStack && m_realmDetailPage) {
         m_realmDetailPage->setServer(server);
         m_centralStack->setCurrentWidget(m_realmDetailPage);
@@ -1858,6 +1895,8 @@ void MainWindow::showInstancesView()
 {
     if (actionShowServers) actionShowServers->setChecked(false);
     if (actionShowInstances) actionShowInstances->setChecked(true);
+    if (actionShowSocial) actionShowSocial->setChecked(false);
+    if (actionShowWardrobe) actionShowWardrobe->setChecked(false);
     if (m_centralStack && view) {
         m_centralStack->setCurrentWidget(view);
         ui->instanceToolBar->setVisible(true);
@@ -1866,6 +1905,80 @@ void MainWindow::showInstancesView()
             setInstanceActionsEnabled(true);
         }
     }
+}
+
+void MainWindow::showSocialView()
+{
+    if (actionShowServers) actionShowServers->setChecked(false);
+    if (actionShowInstances) actionShowInstances->setChecked(false);
+    if (actionShowSocial) actionShowSocial->setChecked(true);
+    if (actionShowWardrobe) actionShowWardrobe->setChecked(false);
+    if (m_centralStack && m_socialOverlay) {
+        m_centralStack->setCurrentWidget(m_socialOverlay);
+        if (m_friendManager) m_friendManager->refreshFriends();
+        ui->instanceToolBar->setVisible(false);
+        ui->instanceToolBar->setEnabled(false);
+        setInstanceActionsEnabled(false);
+    }
+}
+
+void MainWindow::showWardrobeView()
+{
+    if (actionShowServers) actionShowServers->setChecked(false);
+    if (actionShowInstances) actionShowInstances->setChecked(false);
+    if (actionShowSocial) actionShowSocial->setChecked(false);
+    if (actionShowWardrobe) actionShowWardrobe->setChecked(true);
+    if (m_centralStack && m_wardrobePage) {
+        m_centralStack->setCurrentWidget(m_wardrobePage);
+        ui->instanceToolBar->setVisible(false);
+        ui->instanceToolBar->setEnabled(false);
+        setInstanceActionsEnabled(false);
+    }
+}
+
+void MainWindow::openMultiplayerHostDialog()
+{
+    if (!m_selectedInstance) {
+        auto instList = APPLICATION->instances();
+        if (instList && instList->count() > 0) {
+            m_selectedInstance = instList->at(0);
+        }
+    }
+    if (!m_selectedInstance) {
+        QMessageBox::warning(this, tr("Host Multiplayer"), tr("Please create or select a Minecraft instance first to host a world."));
+        return;
+    }
+
+    auto* dlg = new SVLMultiplayerHostDialog(m_selectedInstance, m_hostingManager, this);
+    connect(dlg, &SVLMultiplayerHostDialog::readyToLaunchHostedInstance, this, [this](MinecraftInstance* inst) {
+        if (inst) {
+            APPLICATION->launch(inst, LaunchMode::Normal);
+        }
+    });
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->open();
+}
+
+void MainWindow::joinFriendSession(const QString& address, quint16 port)
+{
+    if (!m_selectedInstance) {
+        auto instList = APPLICATION->instances();
+        if (instList && instList->count() > 0) {
+            m_selectedInstance = instList->at(0);
+        }
+    }
+    if (!m_selectedInstance) {
+        QMessageBox::warning(this, tr("No Instance"), tr("Please install or select a Minecraft instance first to join your friend's game."));
+        return;
+    }
+
+    // Apply active cosmetics before launching
+    if (m_wardrobeManager) {
+        WardrobeProfile profile = m_wardrobeManager->loadLocalProfile();
+        SVLWardrobeManager::applyCosmeticsToInstance(m_selectedInstance, profile);
+    }
+
+    launchSVLServer(m_selectedInstance, address, port);
 }
 
 void MainWindow::launchSVLServer(MinecraftInstance* instance, const QString& ip, quint16 port)

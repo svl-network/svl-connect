@@ -406,6 +406,8 @@ set(TASKS_SOURCES
     tasks/SVLAntiCheatScanner.cpp
     tasks/SVLUpdateManager.h
     tasks/SVLUpdateManager.cpp
+    tasks/SVLBridgeInjector.h
+    tasks/SVLBridgeInjector.cpp
 )
 
 set(SETTINGS_SOURCES
@@ -1050,8 +1052,21 @@ SET(LAUNCHER_SOURCES
     ui/pages/svl/SVLModrinthBrowser.h
     ui/pages/svl/SVLAccountManager.cpp
     ui/pages/svl/SVLAccountManager.h
+    ui/pages/svl/SVLHostingManager.cpp
+    ui/pages/svl/SVLHostingManager.h
+    ui/pages/svl/SVLFriendModel.h
+    ui/pages/svl/SVLFriendManager.cpp
+    ui/pages/svl/SVLFriendManager.h
+    ui/pages/svl/SVLSocialOverlay.cpp
+    ui/pages/svl/SVLSocialOverlay.h
+    ui/pages/svl/SVLWardrobeManager.cpp
+    ui/pages/svl/SVLWardrobeManager.h
+    ui/pages/svl/SVLWardrobePage.cpp
+    ui/pages/svl/SVLWardrobePage.h
 
     # GUI - dialogs
+    ui/dialogs/SVLMultiplayerHostDialog.cpp
+    ui/dialogs/SVLMultiplayerHostDialog.h
     ui/dialogs/SVLUpdateOverlay.cpp
     ui/dialogs/SVLUpdateOverlay.h
     ui/dialogs/SVLLoadingOverlay.cpp

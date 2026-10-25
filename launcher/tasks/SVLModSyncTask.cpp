@@ -332,6 +332,7 @@ void SVLModSyncTask::injectInbuiltClientMods()
     };
 
     bool is26 = m_mcVersion.startsWith("26.");
+    bool is26_2 = m_mcVersion.startsWith("26.2");
     bool needFabricApi = false;
 
     // ✦ OFFICIAL IN-HOUSE SUNVEIL CONNECT CLIENT MOD (Custom Capes, 360° Freelook, Smooth Zoom, Lunar HUD & Settings) ✦
@@ -370,10 +371,15 @@ void SVLModSyncTask::injectInbuiltClientMods()
     }
 
     if (perf) {
-        if (!hasModInManifest("sodium") && !isExplicitlyRemovedByUser("sodium", is26 ? "sodium-fabric-0.9.2+mc26.1.2.jar" : "sodium-fabric-0.8.13+mc1.21.1.jar")) {
+        QString sodiumExpectedFile = is26_2 ? "sodium-fabric-0.9.2+mc26.2.jar" : (is26 ? "sodium-fabric-0.9.2+mc26.1.2.jar" : "sodium-fabric-0.8.13+mc1.21.1.jar");
+        if (!hasModInManifest("sodium") && !isExplicitlyRemovedByUser("sodium", sodiumExpectedFile)) {
             SVLModEntry entry;
             entry.projectId = "sodium";
-            if (is26) {
+            if (is26_2) {
+                entry.fileName = "sodium-fabric-0.9.2+mc26.2.jar";
+                entry.sha256 = "16a5e91db49750f8c046ecca3b8f2af5a28ea6f9b6581b42f123ca8fda20864f";
+                entry.downloadUrl = "https://realms.sunveil.net/downloads/mods/sodium-fabric-0.9.2+mc26.2.jar";
+            } else if (is26) {
                 entry.fileName = "sodium-fabric-0.9.2+mc26.1.2.jar";
                 entry.sha256 = "dd19aaf6755788673941329cff855d89870dc9f69363c653c7f5378e799834f3";
                 entry.downloadUrl = "https://cdn.modrinth.com/data/AANobbMI/versions/tZQ3jqnf/sodium-fabric-0.9.2%2Bmc26.1.2.jar";
@@ -387,10 +393,16 @@ void SVLModSyncTask::injectInbuiltClientMods()
             m_manifestMods.append(entry);
             needFabricApi = true;
         }
-        if (!hasModInManifest("iris") && !isExplicitlyRemovedByUser("iris", is26 ? "iris-fabric-1.11.4+mc26.1.2.jar" : "iris-fabric-1.8.14-beta.1+mc1.21.1.jar")) {
+
+        QString irisExpectedFile = is26_2 ? "iris-fabric-1.11.4+mc26.2.jar" : (is26 ? "iris-fabric-1.11.4+mc26.1.2.jar" : "iris-fabric-1.8.14-beta.1+mc1.21.1.jar");
+        if (!hasModInManifest("iris") && !isExplicitlyRemovedByUser("iris", irisExpectedFile)) {
             SVLModEntry entry;
             entry.projectId = "iris";
-            if (is26) {
+            if (is26_2) {
+                entry.fileName = "iris-fabric-1.11.4+mc26.2.jar";
+                entry.sha256 = "f1f7ab57c974d193ba33aa285864a0ded949216f402116fceaf4dc7739b4dd7c";
+                entry.downloadUrl = "https://realms.sunveil.net/downloads/mods/iris-fabric-1.11.4+mc26.2.jar";
+            } else if (is26) {
                 entry.fileName = "iris-fabric-1.11.4+mc26.1.2.jar";
                 entry.sha256 = "69bdb6899ba006cf91b16565e4445a7a4f331e39b790c81c99626814bf6e22df";
                 entry.downloadUrl = "https://cdn.modrinth.com/data/YL57xq9U/versions/sZbVsl2Q/iris-fabric-1.11.4%2Bmc26.1.2.jar";
@@ -406,10 +418,15 @@ void SVLModSyncTask::injectInbuiltClientMods()
         }
     }
 
-    if (needFabricApi && !hasModInManifest("fabric-api") && !isExplicitlyRemovedByUser("fabric-api", is26 ? "fabric-api-0.155.3+26.1.2.jar" : "fabric-api-0.116.17+1.21.1.jar")) {
+    QString fapiExpectedFile = is26_2 ? "fabric-api-0.160.0+26.2.jar" : (is26 ? "fabric-api-0.155.3+26.1.2.jar" : "fabric-api-0.116.17+1.21.1.jar");
+    if (needFabricApi && !hasModInManifest("fabric-api") && !isExplicitlyRemovedByUser("fabric-api", fapiExpectedFile)) {
         SVLModEntry entry;
         entry.projectId = "fabric-api";
-        if (is26) {
+        if (is26_2) {
+            entry.fileName = "fabric-api-0.160.0+26.2.jar";
+            entry.sha256 = "5f3dff88e1661166e222213302b25ace6c36dc3683804cbd4b5acf93138ea05e";
+            entry.downloadUrl = "https://realms.sunveil.net/downloads/mods/fabric-api-0.160.0+26.2.jar";
+        } else if (is26) {
             entry.fileName = "fabric-api-0.155.3+26.1.2.jar";
             entry.sha256 = "7fe7bea3dbb7b2e9ff998ab583130cd62fab22ab8a5229656ff14b2e648c91dd";
             entry.downloadUrl = "https://cdn.modrinth.com/data/P7dR8mSH/versions/3dM0X6ou/fabric-api-0.155.3%2B26.1.2.jar";
