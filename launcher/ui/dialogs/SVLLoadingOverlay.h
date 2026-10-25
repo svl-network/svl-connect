@@ -17,9 +17,13 @@ public:
     void setDetailStatus(const QString& text);
     void setProgress(int current, int total);
     void setIndeterminate(bool indeterminate);
+    void dismiss();
 
 signals:
     void cancelRequested();
+
+protected:
+    void showEvent(QShowEvent* event) override;
 
 private:
     void setupUI();

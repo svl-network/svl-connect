@@ -947,25 +947,37 @@ void SVLConnectPage::onConnectClicked(const SVLServerModel& server)
     auto* overlay = new SVLLoadingOverlay(this->window());
     overlay->setPrimaryStatus(tr("CONNECTING TO %1").arg(server.name.toUpper()));
     overlay->setDetailStatus(tr("Verifying realm manifest and synchronizing client assets..."));
+    overlay->show();
+    overlay->raise();
 
     connect(syncTask, &SVLModSyncTask::status, overlay, [overlay](const QString& statusText) {
-        overlay->setPrimaryStatus(statusText);
+        if (overlay) overlay->setPrimaryStatus(statusText);
     });
 
     connect(syncTask, &SVLModSyncTask::progress, overlay, [overlay](qint64 current, qint64 total) {
-        overlay->setProgress(static_cast<int>(current), static_cast<int>(total));
+        if (overlay) overlay->setProgress(static_cast<int>(current), static_cast<int>(total));
     });
 
-    connect(syncTask, &SVLModSyncTask::readyToLaunch, this, [this](MinecraftInstance* inst, const QString& ip, quint16 port) {
+    connect(syncTask, &SVLModSyncTask::readyToLaunch, this, [this, overlay](MinecraftInstance* inst, const QString& ip, quint16 port) {
+        if (inst && overlay) {
+            connect(inst, &BaseInstance::runningStatusChanged, overlay, [overlay](bool running) {
+                if (running && overlay) {
+                    overlay->dismiss();
+                }
+            });
+        }
         emit launchRequested(inst, ip, port);
+        if (overlay) {
+            overlay->dismiss();
+        }
     });
 
     connect(syncTask, &Task::succeeded, overlay, [overlay]() {
-        overlay->accept();
+        if (overlay) overlay->dismiss();
     });
 
     connect(syncTask, &Task::failed, overlay, [this, overlay, server](const QString& reason) {
-        overlay->reject();
+        if (overlay) overlay->dismiss();
         bool retry = SVLErrorOverlay::showError(
             this,
             tr("CONNECTION FAILED"),
@@ -979,11 +991,15 @@ void SVLConnectPage::onConnectClicked(const SVLServerModel& server)
         }
     });
 
-    connect(overlay, &SVLLoadingOverlay::cancelRequested, syncTask, [syncTask]() {
-        syncTask->abort();
+    connect(syncTask, &Task::aborted, overlay, [overlay]() {
+        if (overlay) overlay->dismiss();
+    });
+
+    connect(overlay, &SVLLoadingOverlay::cancelRequested, this, [syncTask]() {
+        if (syncTask && syncTask->isRunning() && !syncTask->isFinished()) {
+            syncTask->abort();
+        }
     });
 
     syncTask->start();
-    overlay->exec();
-    overlay->deleteLater();
 }

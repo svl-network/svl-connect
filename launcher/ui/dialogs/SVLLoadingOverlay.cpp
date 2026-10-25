@@ -8,9 +8,9 @@ SVLLoadingOverlay::SVLLoadingOverlay(QWidget* parent)
     : QDialog(parent, Qt::Dialog | Qt::FramelessWindowHint)
 {
     setAttribute(Qt::WA_TranslucentBackground, true);
-    setAttribute(Qt::WA_DeleteOnClose, false);
+    setAttribute(Qt::WA_DeleteOnClose, true);
     setFixedSize(540, 360);
-    setModal(true);
+    setModal(false);
 
     setupUI();
 
@@ -138,11 +138,30 @@ void SVLLoadingOverlay::setupUI()
     m_cancelBtn->setCursor(Qt::PointingHandCursor);
     connect(m_cancelBtn, &QPushButton::clicked, this, [this]() {
         emit cancelRequested();
-        reject();
+        dismiss();
     });
     layout->addWidget(m_cancelBtn, 0, Qt::AlignCenter);
 
     rootLayout->addWidget(cardFrame);
+}
+
+void SVLLoadingOverlay::showEvent(QShowEvent* event)
+{
+    QDialog::showEvent(event);
+    if (parentWidget() && parentWidget()->window()) {
+        auto parentGeom = parentWidget()->window()->geometry();
+        move(parentGeom.center().x() - width() / 2, parentGeom.center().y() - height() / 2);
+    }
+}
+
+void SVLLoadingOverlay::dismiss()
+{
+    if (m_pulseTimer) {
+        m_pulseTimer->stop();
+    }
+    hide();
+    close();
+    deleteLater();
 }
 
 void SVLLoadingOverlay::setPrimaryStatus(const QString& text)

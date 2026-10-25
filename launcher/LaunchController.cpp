@@ -503,8 +503,19 @@ void LaunchController::onFailed(QString reason)
 
 void LaunchController::onProgressRequested(Task* task) const
 {
+    if (m_instance && m_instance->isRunning()) {
+        m_launcher->proceed();
+        return;
+    }
     ProgressDialog progDialog(m_parentWidget);
     progDialog.setSkipButton(true, tr("Abort"));
+    if (m_instance) {
+        connect(m_instance, &BaseInstance::runningStatusChanged, &progDialog, [&progDialog](bool running) {
+            if (running) {
+                progDialog.accept();
+            }
+        });
+    }
     m_launcher->proceed();
     progDialog.execWithTask(task);
 }
